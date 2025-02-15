@@ -21,3 +21,7 @@ https://github.com/Buddha7771/ChzzkChat?tab=readme-ov-file
 
 오픈소스 프로젝트 모음
 https://github.com/dokdo2013/awesome-chzzk
+
+### 채팅 로그에 대한 수요
+https://gall.dcinside.com/mini/board/view/?id=aesther&no=163893
+https://www.fmkorea.com/4883016492
