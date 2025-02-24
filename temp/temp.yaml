@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: python-runner-pod
+spec:
+  containers:
+    - name: python-container
+      image: 691487686124.dkr.ecr.ap-northeast-2.amazonaws.com/chzzk_producer:latest
+      command: ["sleep", "infinity"]
+      # command: ["python", "/app/run.py"]
