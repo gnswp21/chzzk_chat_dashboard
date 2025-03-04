@@ -25,5 +25,5 @@ RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | b
 # 실행파일 PATH에 설정정
 ENV PATH=/root/bin:$PATH
 
-ARG EKS_NAME=scrumptious-classical-crow
+ARG EKS_NAME=wonderful-dubstep-rainbow
 RUN aws eks update-kubeconfig --region ap-northeast-2 --name $EKS_NAME
