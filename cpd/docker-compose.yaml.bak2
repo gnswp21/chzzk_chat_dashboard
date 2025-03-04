@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  # mysql:
+  #   image: bitnami/mysql:latest
+  #   container_name: mysql
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=example
+  #     - MYSQL_DATABASE=mydb
+  #     - MYSQL_USER=user
+  #     - MYSQL_PASSWORD=password
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/bitnami/mysql
+  #   networks:
+  #     - my-network
+
+  # mongo:
+  #   image: bitnami/mongodb:latest
+  #   container_name: mongo
+  #   environment:
+  #     - MONGODB_ROOT_PASSWORD=example
+  #     - MONGODB_USERNAME=user
+  #     - MONGODB_PASSWORD=password
+  #     - MONGODB_DATABASE=mydatabase
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo_data:/bitnami/mongodb
+  #   networks:
+  #     - my-network
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+    networks:
+      - my-network
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      # - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      # - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      # - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    ports:
+      - "9092:9092"
+    # volumes:
+    #   - kafka_data:/bitnami/kafka
+    # healthcheck:
+    #   test: ["CMD", "sh", "-c", "echo > /dev/tcp/localhost/9092"]
+    #   interval: 10s
+    #   timeout: 10s
+    #   retries: 10
+    networks:
+      - my-network
+
+  # producer:
+  #   build: ./producer
+  #   container_name: kafka-producer
+  #   depends_on:
+  #     kafka:
+  #       # condition: service_healthy
+  #   networks:
+  #     - my-network
+
+  # consumer:
+  #   build: ./consumer
+  #   container_name: kafka-spark-consumer
+  #   depends_on:
+  #     - kafka
+  #     - mysql
+  #     - mongo
+  #   networks:
+  #     - my-network
+  
+  # web:
+  #   build: ./web
+  #   container_name: web
+  #   depends_on:
+  #     - mysql
+  #     - mongo
+  #   networks:
+  #     - my-network
+  #   ports:
+  #     - 8501:8501
+
+volumes:
+  mysql_data:
+  mongo_data:
+  kafka_data:
+
+networks:
+  my-network:
+    driver: bridge
