@@ -25,16 +25,13 @@ class ChzzkChat:
         self.accessToken, self.extraToken = api.fetch_accessToken(
             self.chatChannelId, self.cookies)
         # kafka
-        self.kafka_init()
-
-        self.connect()
-
-    def kafka_init(self, BROKER=None):
-        # Kafka 브로커 및 토픽 설정
         if not BROKER:
             BROKER = "my-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
             
         self.producer = KafkaProducer(bootstrap_servers=[BROKER])
+
+        self.connect()
+
 
     def send_kafka_msg(self, msg):
         BROKER = "my-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
