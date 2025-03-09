@@ -1,0 +1,193 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import from_json, col, window, coalesce, lit
+from pyspark.sql.types import StructType, StructField, StringType, TimestampType
+import pymysql
+from pymongo import MongoClient
+from dbutils.pooled_db import PooledDB  # pip install DBUtils
+
+# MySQL 커넥션 풀 생성 (최대 5개의 연결)
+mysql_pool = PooledDB(
+    creator=pymysql,
+    host="mysql",
+    user="user",
+    password="password",
+    database="mydb",
+    autocommit=True,
+    blocking=True,
+    maxconnections=5
+)
+
+# MongoDB 글로벌 클라이언트 (내부적으로 커넥션 풀 사용)
+mongo_client = MongoClient("mongodb://user:password@mongo:27017/mydatabase?authSource=mydatabase")
+
+
+# 각 배치마다 원본 메시지를 MySQL과 MongoDB에 저장하는 함수
+def foreach_batch_function(batch_df, batch_id):
+    rows = batch_df.collect()
+    batch_df.show(truncate=False)
+    if not rows:
+        return
+
+    # MySQL 저장 (커넥션 풀 사용)
+    try:
+        conn = mysql_pool.connection()
+        cursor = conn.cursor()
+        # 테이블 생성 (없으면) - 각 필드를 별도 컬럼으로 저장
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                channelName VARCHAR(255),
+                timestamp DATETIME,
+                chat_type VARCHAR(255),
+                nickname VARCHAR(255),
+                msg TEXT
+            )
+        """)
+        for row in rows:
+            channelName = row['channelName']
+            ts = row['timestamp']
+            chat_type = row['chat_type']
+            nickname = row['nickname']
+            msg = row['msg']
+            query = "INSERT INTO chat_messages (channelName, timestamp, chat_type, nickname, msg) VALUES (%s, %s, %s, %s, %s)"
+            cursor.execute(query, (channelName, ts, chat_type, nickname, msg))
+        conn.commit()
+        cursor.close()
+        conn.close()  # 반납됨
+        print(f"MySQL에 {len(rows)} 건 저장 완료")
+    except Exception as e:
+        print("MySQL 저장 에러:", e)
+
+    # MongoDB 저장 (글로벌 클라이언트 재사용)
+    try:
+        db = mongo_client["mydatabase"]
+        collection = db["chat_messages"]
+        docs = [{
+            "channelName": row['channelName'],
+            "timestamp": row['timestamp'],
+            "chat_type": row['chat_type'],
+            "nickname": row['nickname'],
+            "msg": row['msg']
+        } for row in rows]
+        if docs:
+            collection.insert_many(docs)
+        print(f"MongoDB에 {len(docs)} 건 저장 완료")
+    except Exception as e:
+        print("MongoDB 저장 에러:", e)
+
+
+# 각 마이크로 배치마다 MySQL에 집계 데이터를 저장하는 함수 (커넥션 풀 사용)
+def foreach_batch_agg(batch_df, batch_id):
+    rows = batch_df.collect()
+    if not rows:
+        return
+
+    try:
+        conn = mysql_pool.connection()
+        cursor = conn.cursor()
+        # 집계 결과를 저장할 테이블 생성 (없으면 생성)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_messages_agg (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                channelName VARCHAR(255),
+                window_start DATETIME,
+                window_end DATETIME,
+                message_count INT
+            )
+        """)
+        for row in rows:
+            channelName = row["channelName"]
+            window_start = row["window_start"]
+            window_end = row["window_end"]
+            count_val = row["count"]
+            query = """
+                INSERT INTO chat_messages_agg (channelName, window_start, window_end, message_count)
+                VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(query, (channelName, window_start, window_end, count_val))
+        conn.commit()
+        cursor.close()
+        conn.close()  # 반납됨
+        print(f"MySQL에 집계 데이터 {len(rows)} 건 저장 완료")
+    except Exception as e:
+        print("MySQL 집계 데이터 저장 에러:", e)
+        
+
+if __name__ == '__main__':
+    # Spark 세션 생성
+    spark = SparkSession.builder.appName("KafkaSparkStreamingConsumer").getOrCreate()
+    spark.sparkContext.setLogLevel("WARN")
+
+    # JSON 메시지 스키마 정의 (timestamp는 TimestampType)
+    schema = StructType([
+        StructField("channelName", StringType(), True),
+        StructField("timestamp", TimestampType(), True),
+        StructField("chat_type", StringType(), True),
+        StructField("nickname", StringType(), True),
+        StructField("msg", StringType(), True)
+    ])
+
+    # Kafka에서 스트림으로 데이터 읽기 (Kafka 기본 제공 timestamp 포함)
+    df = spark \
+        .readStream \
+        .format("kafka") \
+        .option("kafka.bootstrap.servers", "kafka:9092") \
+        .option("subscribe", "chzzk") \
+        .load()
+
+    # Kafka 메시지의 value를 문자열로 변환
+    df_string = df.selectExpr("CAST(value AS STRING) as json_str")
+
+    # JSON 파싱 후 각 필드를 분리
+    df_parsed = df_string.select(from_json(col("json_str"), schema).alias("data")) \
+        .select("data.*")
+    
+    # foreachBatch를 사용해 배치 단위로 원본 메시지 저장
+    query_raw = df_parsed.writeStream \
+        .foreachBatch(foreach_batch_function) \
+        .outputMode("append") \
+        .start()
+
+    # 10초 윈도우 단위로 집계: 실제로 메시지가 있는 채널만 집계됨
+    df_agg = df_parsed.withWatermark("timestamp", "1 minute") \
+    .groupBy(
+        "channelName",
+        window(col("timestamp"), "10 seconds")
+    ).count()
+
+    # count 컬럼명을 변경
+    df_agg = df_agg.withColumnRenamed("count", "agg_count")
+
+    # 미리 기대하는 채널 리스트 DataFrame 생성
+    expected_channels = ['channelA', 'channelB', 'channelC']
+    df_channels = spark.createDataFrame([(ch,) for ch in expected_channels], ["channelName"])
+
+    # 집계 결과에서 존재하는 윈도우(시간 구간)를 추출
+    df_windows = df_agg.select("window").distinct()
+
+    # 모든 윈도우와 기대하는 채널의 조합 생성 (cross join)
+    df_all = df_windows.crossJoin(df_channels)
+
+    # left join을 통해 실제 집계 결과와 합침 (별칭 사용)
+    df_full = df_all.join(
+        df_agg,
+        (df_all["window"] == df_agg["window"]) & (df_all["channelName"] == df_agg["channelName"]),
+        "left"
+    )
+
+    # 누락된 값은 0으로 채우고 필요한 컬럼만 선택
+    df_full = df_full.select(
+        df_all["channelName"],
+        df_all["window"].start.alias("window_start"),
+        df_all["window"].end.alias("window_end"),
+        coalesce(df_agg["agg_count"], lit(0)).alias("count")
+    )
+
+    # 스트리밍 쿼리 실행 (foreachBatch를 사용하여 집계 데이터 DB에 저장)
+    query = df_full.writeStream \
+        .outputMode("append") \
+        .foreachBatch(foreach_batch_agg) \
+        .start()
+
+    # 하나의 awaitTermination() 호출로 전체 스트리밍 애플리케이션이 계속 실행됨
+    query.awaitTermination()

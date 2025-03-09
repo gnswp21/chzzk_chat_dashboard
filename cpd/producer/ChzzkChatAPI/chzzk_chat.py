@@ -27,21 +27,25 @@ class ChzzkChat:
         # kafka
         if not BROKER:
             BROKER = "my-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
-            
+
         self.producer = KafkaProducer(bootstrap_servers=[BROKER])
 
         self.connect()
 
-
-    def send_kafka_msg(self, msg):
-        BROKER = "my-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
-        TOPIC = "debug-topic"
-        MESSAGE = msg
-        import logging
+    def send_kafka_msg(self, channelName, now, chat_type, nickname, msg):
+        TOPIC = 'chzzk'
+        # JSON 형식으로 메시지 구성
+        MESSAGE = json.dumps({
+            "channelName": channelName,
+            "chat_type": chat_type,
+            "nickname": nickname,
+            "msg": msg
+        })
 
         def on_success(metadata):
             logging.info(
-                f"메시지 전송 성공: topic={metadata.topic}, partition={metadata.partition}, offset={metadata.offset}")
+                f"메시지 전송 성공: topic={metadata.topic}, partition={metadata.partition}, offset={metadata.offset}"
+            )
 
         def on_error(ex):
             logging.error(f"메시지 전송 실패: {ex}")
@@ -51,7 +55,7 @@ class ChzzkChat:
         future.add_callback(on_success)
         future.add_errback(on_error)
 
-        # 메시지 플러시 및 종료
+        # 메시지 플러시
         self.producer.flush()
 
     def connect(self):
@@ -63,7 +67,7 @@ class ChzzkChat:
 
         sock = WebSocket()
         sock.connect('wss://kr-ss1.chat.naver.com/chat')
-        print(f'{self.channelName} 채팅창에 연결 중 .', end="")
+        self.logger.info(f'{self.channelName} 채팅창에 연결 중 .')
 
         default_dict = {
             "ver": "2",
@@ -85,7 +89,7 @@ class ChzzkChat:
         sock.send(json.dumps(dict(send_dict, **default_dict)))
         sock_response = json.loads(sock.recv())
         self.sid = sock_response['bdy']['sid']
-        print(f'\r{self.channelName} 채팅창에 연결 중 ..', end="")
+        self.logger.info(f'\r{self.channelName} 채팅창에 연결 중 ..')
 
         send_dict = {
             "cmd": CHZZK_CHAT_CMD['request_recent_chat'],
@@ -99,11 +103,11 @@ class ChzzkChat:
 
         sock.send(json.dumps(dict(send_dict, **default_dict)))
         sock.recv()
-        print(f'\r{self.channelName} 채팅창에 연결 중 ...')
+        self.logger.info(f'\r{self.channelName} 채팅창에 연결 중 ...')
 
         self.sock = sock
         if self.sock.connected:
-            print('연결 완료')
+            self.logger.info('연결 완료')
         else:
             raise ValueError('오류 발생')
 
@@ -202,10 +206,11 @@ class ChzzkChat:
                         chat_data['msgTime']/1000)
                     now = datetime.datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
 
-                    msg = f'[{now}][{chat_type}] {nickname} : {chat_data["msg"]}'
-                    self.send_kafka_msg(msg)
-                    # self.logger.info(
-                    #     f'[{now}][{chat_type}] {nickname} : {chat_data["msg"]}')
+                    # msg = f'[{self.channelName}][{now}][{chat_type}] {nickname} : {chat_data["msg"]}'
+                    self.send_kafka_msg(
+                        self.channelName, now, chat_type, nickname, chat_data["msg"])
+                    self.logger.info(
+                        f'[{self.channelName}][{now}][{chat_type}] {nickname} : {chat_data["msg"]}')
 
             except:
                 pass

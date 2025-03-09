@@ -29,9 +29,7 @@ if __name__ == '__main__':
     # 예시: 5개의 채널(streamer id)을 리스트로 정의
     channel_list = [
         '17aa057a8248b53affe30512a91481f5',
-        '0dad8baf12a436f722faa8e5001c5011',
-        '6e06f5e1907f17eff543abd06cb62891',
-        'cd04c50c6ff488ac96f8900e26e5b993',
+        '6e06f5e1907f17eff543abd06cb62891'
     ]
 
     with open('/app/cookies.json') as f:

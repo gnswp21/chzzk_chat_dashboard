@@ -1,135 +1,91 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, window
-from pyspark.sql.types import StructType, StructField, StringType
-import pymysql
-from pymongo import MongoClient
+from pyspark.sql.functions import col, from_json, window, lit, coalesce
+from pyspark.sql.types import StructType, StructField, StringType, TimestampType
+import datetime
 
-# Spark 세션 생성
-spark = SparkSession.builder.appName(
-    "KafkaSparkStreamingConsumer").getOrCreate()
+spark = SparkSession.builder.appName("KafkaStreamingWithForeachBatch").getOrCreate()
 spark.sparkContext.setLogLevel("WARN")
 
-# 메시지 JSON 스키마 (메시지 형식: {"name": "xxx", "chat": "내용"})
+# JSON 메시지 스키마 정의
 schema = StructType([
-    StructField("name", StringType(), True),
-    StructField("chat", StringType(), True)
+    StructField("channelName", StringType(), True),
+    StructField("chat_type", StringType(), True),
+    StructField("nickname", StringType(), True),
+    StructField("msg", StringType(), True)
 ])
 
-# Kafka에서 스트림으로 데이터 읽기 (Kafka 기본 제공 timestamp 포함)
-df = spark \
-    .readStream \
+# ✅ Kafka 메시지 읽기
+df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "kafka:9092") \
-    .option("subscribe", "tst") \
-    .option("startingOffsets", "earliest") \
+    .option("subscribe", "chzzk") \
     .load()
 
-# Kafka 메시지의 value를 문자열로 변환하고, timestamp 컬럼도 선택
-df_string = df.selectExpr("CAST(value AS STRING) as json_str", "timestamp")
+# ✅ Kafka 메시지 JSON 변환 및 Kafka 타임스탬프 활용
+df_parsed = df.select(
+    col("timestamp").alias("timestamp"),  # Kafka 타임스탬프
+    from_json(col("value").cast("string"), schema).alias("data")
+).select(
+    col("timestamp"),  # Kafka 타임스탬프 사용
+    col("data.*")  # JSON 파싱된 필드
+)
 
-# JSON 파싱 후 컬럼 분리 및 timestamp 포함
-df_parsed = df_string.select(from_json(col("json_str"), schema).alias("data"), "timestamp") \
-    .select("data.*", "timestamp")
-
-# 각 배치마다 원본 메시지를 MySQL과 MongoDB에 저장하는 함수
-
-
-def foreach_batch_function(batch_df, batch_id):
-    rows = batch_df.collect()
-    if not rows:
-        return
-
-    # MySQL 저장
-    try:
-        conn = pymysql.connect(host="mysql", user="user",
-                               password="password", database="mydb")
-        cursor = conn.cursor()
-        # 테이블 생성 (없으면)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS chat_messages (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255),
-                chat TEXT
-            )
-        """)
-        for row in rows:
-            name = row['name']
-            chat = row['chat']
-            query = "INSERT INTO chat_messages (name, chat) VALUES (%s, %s)"
-            cursor.execute(query, (name, chat))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print(f"MySQL에 {len(rows)} 건 저장 완료")
-    except Exception as e:
-        print("MySQL 저장 에러:", e)
-
-    # MongoDB 저장
-    try:
-        client = MongoClient(
-            "mongodb://user:password@mongo:27017/mydatabase?authSource=mydatabase")
-        db = client["mydatabase"]
-        collection = db["chat_messages"]
-        docs = [{"name": row['name'], "chat": row['chat']} for row in rows]
-        if docs:
-            collection.insert_many(docs)
-        client.close()
-        print(f"MongoDB에 {len(docs)} 건 저장 완료")
-    except Exception as e:
-        print("MongoDB 저장 에러:", e)
-
-
-# foreachBatch를 사용해 배치 단위로 원본 메시지 저장
-query_raw = df_parsed.writeStream \
-    .foreachBatch(foreach_batch_function) \
-    .outputMode("append") \
-    .start()
-
-# ------------------ 추가 로직: 10초 윈도우 집계 ------------------
-
-# 10초 간격의 윈도우로 메시지 수 집계
-df_agg = df_parsed.groupBy(window(col("timestamp"), "10 seconds")) \
+# ✅ 10초 윈도우 집계 (Watermark를 30초로 늘려 데이터 손실 방지)
+agg_df = df_parsed.withWatermark("timestamp", "30 seconds") \
+    .groupBy("channelName", window(col("timestamp"), "10 seconds")) \
     .count() \
-    .selectExpr("window.start as window_start", "window.end as window_end", "count")
+    .withColumnRenamed("count", "msg_count")
 
+# ✅ 윈도우 정보 추출
+agg_df_flat = agg_df.select(
+    "channelName",
+    col("window.start").alias("win_start"),
+    col("window.end").alias("win_end"),
+    "msg_count"
+)
 
-def foreach_batch_agg(batch_df, batch_id):
-    rows = batch_df.collect()
-    if not rows:
+# ✅ 정적 채널 리스트
+static_channels = ["녹두로", "B", "C"]
+
+# ✅ `foreachBatch` 내부에서 빈 배치에서도 0 카운트 보장하는 함수
+def fill_missing_channels(batch_df, epoch_id):
+    # 현재 시간 기준으로 가장 가까운 10초 윈도우 정렬
+    now = datetime.datetime.utcnow()
+    aligned_win_start = now.replace(second=(now.second // 10) * 10, microsecond=0)
+    aligned_win_end = aligned_win_start + datetime.timedelta(seconds=10)
+
+    if batch_df.isEmpty():
+        # ✅ 배치가 비어 있을 경우, 기본 윈도우 생성하여 각 채널에 0 카운트 추가
+        empty_data = [(c, aligned_win_start, aligned_win_end, 0) for c in static_channels]
+        empty_df = spark.createDataFrame(empty_data, ["channelName", "win_start", "win_end", "msg_count"])
+        empty_df.show(truncate=False)
         return
+    
+    # ✅ 정적 채널 리스트를 Spark DataFrame으로 변환
+    static_df = spark.createDataFrame([(c,) for c in static_channels], ["channelName"])
 
-    try:
-        conn = pymysql.connect(host="mysql", user="user",
-                               password="password", database="mydb")
-        cursor = conn.cursor()
-        # 집계 결과를 저장할 테이블 생성 (없으면)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS chat_messages_agg (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                window_start DATETIME,
-                window_end DATETIME,
-                message_count INT
-            )
-        """)
-        for row in rows:
-            window_start = row['window_start']
-            window_end = row['window_end']
-            count_val = row['count']
-            query = "INSERT INTO chat_messages_agg (window_start, window_end, message_count) VALUES (%s, %s, %s)"
-            cursor.execute(query, (window_start, window_end, count_val))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print(f"MySQL에 집계 데이터 {len(rows)} 건 저장 완료")
-    except Exception as e:
-        print("MySQL 집계 데이터 저장 에러:", e)
+    # ✅ 현재 배치에서 생성된 윈도우 리스트 추출
+    windows_df = batch_df.select("win_start", "win_end").distinct()
 
+    # ✅ 모든 윈도우에 대해 정적 채널 추가
+    full_df = windows_df.crossJoin(static_df) \
+        .join(batch_df, on=["channelName", "win_start", "win_end"], how="left") \
+        .select(
+            "channelName",
+            "win_start",
+            "win_end",
+            coalesce(col("msg_count"), lit(0)).alias("msg_count")  # NULL이면 0으로 변경
+        )
 
-# foreachBatch를 사용해 10초 집계 데이터를 MySQL에 저장
-query_agg = df_agg.writeStream \
-    .foreachBatch(foreach_batch_agg) \
-    .outputMode("update") \
+    # ✅ 결과 출력 (또는 데이터 저장)
+    full_df.show(truncate=False)
+
+# ✅ 배치마다 `fill_missing_channels` 적용
+query = agg_df_flat.writeStream \
+    .outputMode("append") \
+    .foreachBatch(fill_missing_channels) \
+    .option("checkpointLocation", "/tmp/kafka_checkpoint") \
+    .trigger(processingTime="10 seconds") \
     .start()
 
-# 두 스트리밍 쿼리가 모두 종료될 때까지 대기
-query_raw.awaitTermination()
+query.awaitTermination()

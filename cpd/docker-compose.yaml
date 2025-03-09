@@ -1,35 +1,35 @@
 version: "3.8"
 
 services:
-  mysql:
-    image: bitnami/mysql:latest
-    container_name: mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=example
-      - MYSQL_DATABASE=mydb
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=password
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/bitnami/mysql
-    networks:
-      - my-network
+  # mysql:
+  #   image: bitnami/mysql:latest
+  #   container_name: mysql
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=example
+  #     - MYSQL_DATABASE=mydb
+  #     - MYSQL_USER=user
+  #     - MYSQL_PASSWORD=password
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/bitnami/mysql
+  #   networks:
+  #     - my-network
 
-  mongo:
-    image: bitnami/mongodb:latest
-    container_name: mongo
-    environment:
-      - MONGODB_ROOT_PASSWORD=example
-      - MONGODB_USERNAME=user
-      - MONGODB_PASSWORD=password
-      - MONGODB_DATABASE=mydatabase
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/bitnami/mongodb
-    networks:
-      - my-network
+  # mongo:
+  #   image: bitnami/mongodb:latest
+  #   container_name: mongo
+  #   environment:
+  #     - MONGODB_ROOT_PASSWORD=example
+  #     - MONGODB_USERNAME=user
+  #     - MONGODB_PASSWORD=password
+  #     - MONGODB_DATABASE=mydatabase
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo_data:/bitnami/mongodb
+  #   networks:
+  #     - my-network
 
   zookeeper:
     image: bitnami/zookeeper:latest
@@ -65,26 +65,35 @@ services:
     networks:
       - my-network
 
+
   consumer:
     build: ./consumer
     container_name: kafka-spark-consumer
     depends_on:
       - kafka
-      - mysql
-      - mongo
     networks:
       - my-network
+
+  # consumer:
+  #   build: ./consumer
+  #   container_name: kafka-spark-consumer
+  #   depends_on:
+  #     - kafka
+  #     - mysql
+  #     - mongo
+  #   networks:
+  #     - my-network
   
-  web:
-    build: ./web
-    container_name: web
-    depends_on:
-      - mysql
-      - mongo
-    networks:
-      - my-network
-    ports:
-      - 8501:8501
+  # web:
+  #   build: ./web
+  #   container_name: web
+  #   depends_on:
+  #     - mysql
+  #     - mongo
+  #   networks:
+  #     - my-network
+  #   ports:
+  #     - 8501:8501
 
 volumes:
   mysql_data:
