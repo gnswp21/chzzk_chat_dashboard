@@ -2,9 +2,81 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, from_json, window, lit, coalesce
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 import datetime
+import pymysql
+from pymongo import MongoClient
+from dbutils.pooled_db import PooledDB  # pip install DBUtils
 
 spark = SparkSession.builder.appName("KafkaStreamingWithForeachBatch").getOrCreate()
 spark.sparkContext.setLogLevel("WARN")
+
+# MySQL 커넥션 풀 생성 (최대 5개의 연결)
+mysql_pool = PooledDB(
+    creator=pymysql,
+    host="mysql",
+    user="user",
+    password="password",
+    database="mydb",
+    autocommit=True,
+    blocking=True,
+    maxconnections=5
+)
+
+# MongoDB 글로벌 클라이언트 (내부적으로 커넥션 풀 사용)
+mongo_client = MongoClient("mongodb://user:password@mongo:27017/mydatabase?authSource=mydatabase")
+
+def foreach_batch_function(batch_df, batch_id):
+    rows = batch_df.collect()
+    batch_df.show(truncate=False)
+    if not rows:
+        return
+
+    # MySQL 저장 (커넥션 풀 사용)
+    try:
+        conn = mysql_pool.connection()
+        cursor = conn.cursor()
+        # 테이블 생성 (없으면) - 각 필드를 별도 컬럼으로 저장
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                channelName VARCHAR(255),
+                timestamp DATETIME,
+                chat_type VARCHAR(255),
+                nickname VARCHAR(255),
+                msg TEXT
+            )
+        """)
+        for row in rows:
+            channelName = row['channelName']
+            ts = row['timestamp']
+            chat_type = row['chat_type']
+            nickname = row['nickname']
+            msg = row['msg']
+            query = "INSERT INTO chat_messages (channelName, timestamp, chat_type, nickname, msg) VALUES (%s, %s, %s, %s, %s)"
+            cursor.execute(query, (channelName, ts, chat_type, nickname, msg))
+        conn.commit()
+        cursor.close()
+        conn.close()  # 반납됨
+        print(f"MySQL에 {len(rows)} 건 저장 완료")
+    except Exception as e:
+        print("MySQL 저장 에러:", e)
+
+    # MongoDB 저장 (글로벌 클라이언트 재사용)
+    try:
+        db = mongo_client["mydatabase"]
+        collection = db["chat_messages"]
+        docs = [{
+            "channelName": row['channelName'],
+            "timestamp": row['timestamp'],
+            "chat_type": row['chat_type'],
+            "nickname": row['nickname'],
+            "msg": row['msg']
+        } for row in rows]
+        if docs:
+            collection.insert_many(docs)
+        print(f"MongoDB에 {len(docs)} 건 저장 완료")
+    except Exception as e:
+        print("MongoDB 저장 에러:", e)
+
 
 # JSON 메시지 스키마 정의
 schema = StructType([
@@ -30,62 +102,9 @@ df_parsed = df.select(
     col("data.*")  # JSON 파싱된 필드
 )
 
-# ✅ 10초 윈도우 집계 (Watermark를 30초로 늘려 데이터 손실 방지)
-agg_df = df_parsed.withWatermark("timestamp", "30 seconds") \
-    .groupBy("channelName", window(col("timestamp"), "10 seconds")) \
-    .count() \
-    .withColumnRenamed("count", "msg_count")
-
-# ✅ 윈도우 정보 추출
-agg_df_flat = agg_df.select(
-    "channelName",
-    col("window.start").alias("win_start"),
-    col("window.end").alias("win_end"),
-    "msg_count"
-)
-
-# ✅ 정적 채널 리스트
-static_channels = ["녹두로", "B", "C"]
-
-# ✅ `foreachBatch` 내부에서 빈 배치에서도 0 카운트 보장하는 함수
-def fill_missing_channels(batch_df, epoch_id):
-    # 현재 시간 기준으로 가장 가까운 10초 윈도우 정렬
-    now = datetime.datetime.utcnow()
-    aligned_win_start = now.replace(second=(now.second // 10) * 10, microsecond=0)
-    aligned_win_end = aligned_win_start + datetime.timedelta(seconds=10)
-
-    if batch_df.isEmpty():
-        # ✅ 배치가 비어 있을 경우, 기본 윈도우 생성하여 각 채널에 0 카운트 추가
-        empty_data = [(c, aligned_win_start, aligned_win_end, 0) for c in static_channels]
-        empty_df = spark.createDataFrame(empty_data, ["channelName", "win_start", "win_end", "msg_count"])
-        empty_df.show(truncate=False)
-        return
-    
-    # ✅ 정적 채널 리스트를 Spark DataFrame으로 변환
-    static_df = spark.createDataFrame([(c,) for c in static_channels], ["channelName"])
-
-    # ✅ 현재 배치에서 생성된 윈도우 리스트 추출
-    windows_df = batch_df.select("win_start", "win_end").distinct()
-
-    # ✅ 모든 윈도우에 대해 정적 채널 추가
-    full_df = windows_df.crossJoin(static_df) \
-        .join(batch_df, on=["channelName", "win_start", "win_end"], how="left") \
-        .select(
-            "channelName",
-            "win_start",
-            "win_end",
-            coalesce(col("msg_count"), lit(0)).alias("msg_count")  # NULL이면 0으로 변경
-        )
-
-    # ✅ 결과 출력 (또는 데이터 저장)
-    full_df.show(truncate=False)
-
-# ✅ 배치마다 `fill_missing_channels` 적용
-query = agg_df_flat.writeStream \
+query = df_parsed.writeStream \
     .outputMode("append") \
-    .foreachBatch(fill_missing_channels) \
-    .option("checkpointLocation", "/tmp/kafka_checkpoint") \
-    .trigger(processingTime="10 seconds") \
+    .foreachBatch(foreach_batch_function) \
     .start()
 
 query.awaitTermination()

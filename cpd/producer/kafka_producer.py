@@ -27,13 +27,14 @@ if __name__ == '__main__':
     import json
 
     # 예시: 5개의 채널(streamer id)을 리스트로 정의
-    channel_list = [
-        '17aa057a8248b53affe30512a91481f5',
-        '6e06f5e1907f17eff543abd06cb62891'
-    ]
-
+    with open('/app/channel_list.json') as f:
+        channel_list = json.load(f)
+    channel_list = channel_list.values()
+    
     with open('/app/cookies.json') as f:
         cookies = json.load(f)
+    
+   
 
     logger = get_logger()
     broker = "kafka:9092"
