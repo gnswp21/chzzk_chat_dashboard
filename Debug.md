@@ -36,3 +36,71 @@ LBC를 최신 버전으로 설치하고, Deployment YAML 파일을 수정하여 
 최종적으로 외부 로드 밸런서가 생성되었고, DNS 이름 (예: k8s-default-jupyters-ffc22fd8f1-f24facebb7df9616.elb.ap-northeast-2.amazonaws.com)을 통해 서비스에 접근할 수 있게 되었습니다.+ 추가적으로 모든 서브넷에 해당 태그 추가, http:DNS/tree 로 접근 가능했다.
 
 - SA에 ELB 관련 권한이 부족하다.
+
+
+# loadbalancer
+## 1.sa(쿠버네티스 오브젝트)가  aws의 IAM 사용할 수 있도록 OIDC 설정
+
+```
+EKS_NAME=wonderful-dubstep-rainbow
+eksctl utils associate-iam-oidc-provider --cluster $EKS_NAME --approve
+```
+
+
+## 2. LB IAM 정책을 가진 sa 생성
+
+```
+eksctl create iamserviceaccount \
+  --cluster $EKS_NAME \
+  --namespace kube-system \
+  --name aws-load-balancer-controller \
+  --attach-policy-arn arn:aws:iam::691487686124:policy/AWSLoadBalancerControllerIAMPolicy \
+  --approve
+```
+
+## 3. helm eks LBC 설치
+
+```
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=$EKS_NAME \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller
+
+
+  ## ELB 디버그
+- 로드밸런서.yaml에 해당 태그 추가 --aws-vpc-id
+  - helm으로 가능할지
+- vpc에 모든 서브넷(4개)에 kubernetes.io/role/elb 을 1? 로 설정했던 것 같음음
+
+## EBS 동적 프로비저닝, EBS CSI
+
+
+### 디버그 - 스파크 컨슈머
+
+kubectl delete sparkapplication spark-streaming-consumer
+
+kubectl apply -f build/consumer/spark.yaml
+
+kubectl describe sparkapplication spark-streaming-consumer
+
+kubectl get sparkapplication
+
+
+kubectl logs -f spark-streaming-consumer-driver
+
+컨슈머에는 너무 많은 문제가 있었다.
+
+1. eks-auto 모드는 ㅈ비사용중인 리소스를 제거하는데, 스파크와 적합하지 않은 느낌이다
+2. eks 설치에 대해 더 이해했다.
+   1. eks 콘솔에서는 노드 그룹이 잘 부착이 안된다. gke 때도 그랬는데, 흠 eksctl로 바로 설치하니까 원하는 규격으로 잘 만들어졌다.
+   2. 클러스터 어드민 롤 root에도 추가
+   3. ebs csi 드라이버 추가
+      1. 이를 위해 ec2 풀 엑세스 권한을 노드 그룹에 추가
+3. spark-operator 사용에 rbac 기반 sa가 필요하다고 공식문서에 나왔따.(에러 통해 알고 후에 문서 확인)
+4. kerberos 에러, name 에서 NPE가 나오는 에러가 발생. 
+   1. https://stackoverflow.com/questions/65183714/what-is-the-cause-of-java-lang-nullpointerexception-invalid-null-input-name
+   2. 해당 링크에서 도커파일의 USER를 UID 1001로 해놔서 해당 문제가 발생한 것이라고 하였다.
+   3. 이를 sparkuser로 명명해 고쳐주니 문제가 해결됐다.

@@ -25,6 +25,7 @@ def get_logger():
 if __name__ == '__main__':
     import threading
     import json
+    import os
 
     # 예시: 5개의 채널(streamer id)을 리스트로 정의
     with open('/app/channel_list.json') as f:
@@ -37,7 +38,7 @@ if __name__ == '__main__':
    
 
     logger = get_logger()
-    broker = "kafka:9092"
+    broker = os.environ.get('BROKERS', 'kafka:9092')
 
     threads = []
 

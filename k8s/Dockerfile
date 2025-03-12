@@ -1,4 +1,28 @@
 FROM python:3.9
-ADD ChzzkChat-main /app
-RUN pip install -r /app/requirements.txt
 
+
+RUN apt-get update && apt-get install -y unzip less
+ADD config/password.txt /root/.aws/credentials 
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install
+
+# install kubectl
+RUN curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.31.3/2024-12-12/bin/linux/amd64/kubectl && \
+    mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && chmod +x /root/bin/kubectl
+
+
+# install eksctl
+RUN ARCH=amd64 && \
+    PLATFORM=$(uname -s)_$ARCH && \
+    curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz" && \
+    tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz && \
+    mv /tmp/eksctl $HOME/bin
+
+# Helm 설치
+RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+# 실행파일 PATH에 설정정
+ENV PATH=/root/bin:$PATH
+
+RUN aws eks update-kubeconfig --region ap-northeast-2 --name $EKS_NAME

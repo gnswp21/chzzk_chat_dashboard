@@ -5,10 +5,14 @@ import pymysql.cursors
 from streamlit_autorefresh import st_autorefresh
 import pytz
 import logging
+import os
 
+
+MYSQL_HOST = os.environ.get('MYSQL_HOST', 'mysql')
+BROKERS = os.environ.get('BROKERS', 'kafka:9092')
 # MySQL 연결 설정 (Docker Compose 환경의 경우 host가 "mysql"인 경우)
 DB_CONFIG = {
-    "host": "mysql",
+    "host": MYSQL_HOST,
     "port": 3306,
     "user": "user",
     "password": "password",

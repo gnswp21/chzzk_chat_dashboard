@@ -1,0 +1,48 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: spark-streaming-consumer
+  namespace: default
+spec:
+  type: Python
+  mode: cluster
+  image: 691487686124.dkr.ecr.ap-northeast-2.amazonaws.com/chzzk_consumer:latest
+  imagePullPolicy: Always
+  mainApplicationFile: local:///app/spark_streaming_consumer.py
+  sparkVersion: "3.5.0"
+  sparkConf:
+    "spark.jars.packages": "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0"
+    "spark.jars.ivy": "/tmp/.ivy2"
+    "spark.streaming.kafka.maxRatePerPartition": "1000"   # 스트리밍 속도 제어
+    "spark.dynamicAllocation.enabled": "true"              # 동적 엑서큐터 할당
+    "spark.dynamicAllocation.minExecutors": "1"            # 최소 엑서큐터 수
+    "spark.dynamicAllocation.maxExecutors": "3"           # 최대 엑서큐터 수
+    "spark.dynamicAllocation.initialExecutors": "2"        # 초기 엑서큐터 수
+    "spark.streaming.batch.duration": "10s"                 # 배치 지속 시간
+  driver:
+    cores: 1
+    memory: "512m"
+    labels:
+      version: "3.5.0"
+    env:
+      - name: SPARK_HOME
+        value: "/opt/bitnami/spark"
+      - name: BROKERS
+        value: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+      - name: MYSQL_HOST
+        value: "mysql"
+    serviceAccount: spark-operator-spark
+  executor:
+    serviceAccount: spark-operator-spark
+    cores: 1
+    instances: 2
+    memory: "2g"
+    env:
+      - name: SPARK_HOME
+        value: "/opt/bitnami/spark"
+      - name: BROKERS
+        value: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+      - name: MYSQL_HOST
+        value: "mysql"
+  restartPolicy:
+    type: Never

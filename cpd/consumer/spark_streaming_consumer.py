@@ -5,14 +5,18 @@ import datetime
 import pymysql
 from pymongo import MongoClient
 from dbutils.pooled_db import PooledDB  # pip install DBUtils
+import os
 
 spark = SparkSession.builder.appName("KafkaStreamingWithForeachBatch").getOrCreate()
 spark.sparkContext.setLogLevel("WARN")
 
+MYSQL_HOST = os.environ.get('MYSQL_HOST', 'mysql')
+BROKERS = os.environ.get('BROKERS', 'kafka:9092')
+
 # MySQL 커넥션 풀 생성 (최대 5개의 연결)
 mysql_pool = PooledDB(
     creator=pymysql,
-    host="mysql",
+    host=MYSQL_HOST,
     user="user",
     password="password",
     database="mydb",
@@ -21,8 +25,8 @@ mysql_pool = PooledDB(
     maxconnections=5
 )
 
-# MongoDB 글로벌 클라이언트 (내부적으로 커넥션 풀 사용)
-mongo_client = MongoClient("mongodb://user:password@mongo:27017/mydatabase?authSource=mydatabase")
+# # MongoDB 글로벌 클라이언트 (내부적으로 커넥션 풀 사용)
+# mongo_client = MongoClient("mongodb://user:password@mongo:27017/mydatabase?authSource=mydatabase")
 
 def foreach_batch_function(batch_df, batch_id):
     rows = batch_df.collect()
@@ -60,22 +64,22 @@ def foreach_batch_function(batch_df, batch_id):
     except Exception as e:
         print("MySQL 저장 에러:", e)
 
-    # MongoDB 저장 (글로벌 클라이언트 재사용)
-    try:
-        db = mongo_client["mydatabase"]
-        collection = db["chat_messages"]
-        docs = [{
-            "channelName": row['channelName'],
-            "timestamp": row['timestamp'],
-            "chat_type": row['chat_type'],
-            "nickname": row['nickname'],
-            "msg": row['msg']
-        } for row in rows]
-        if docs:
-            collection.insert_many(docs)
-        print(f"MongoDB에 {len(docs)} 건 저장 완료")
-    except Exception as e:
-        print("MongoDB 저장 에러:", e)
+    # # MongoDB 저장 (글로벌 클라이언트 재사용)
+    # try:
+    #     db = mongo_client["mydatabase"]
+    #     collection = db["chat_messages"]
+    #     docs = [{
+    #         "channelName": row['channelName'],
+    #         "timestamp": row['timestamp'],
+    #         "chat_type": row['chat_type'],
+    #         "nickname": row['nickname'],
+    #         "msg": row['msg']
+    #     } for row in rows]
+    #     if docs:
+    #         collection.insert_many(docs)
+    #     print(f"MongoDB에 {len(docs)} 건 저장 완료")
+    # except Exception as e:
+    #     print("MongoDB 저장 에러:", e)
 
 
 # JSON 메시지 스키마 정의
@@ -89,7 +93,7 @@ schema = StructType([
 # ✅ Kafka 메시지 읽기
 df = spark.readStream \
     .format("kafka") \
-    .option("kafka.bootstrap.servers", "kafka:9092") \
+    .option("kafka.bootstrap.servers", BROKERS) \
     .option("subscribe", "chzzk") \
     .load()
 

@@ -1,12 +1,4 @@
 services:
-  # chatservice:
-  #   container_name: chat
-  #   image: chzzk_producer
-  #   volumes:
-  #     - ./ChzzkChat-main:/app
-  #   working_dir: /app
-  #   command: ["sleep", "infinity"]
-
   client:
     container_name: client
     image: client
@@ -14,3 +6,7 @@ services:
       - .:/app
     working_dir: /app
     command: ["sleep", "infinity"]
+    environment:
+      - EKS_NAME=chzzk-eks-cluster
+
+  

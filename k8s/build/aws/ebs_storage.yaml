@@ -1,0 +1,9 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp2  # 또는 gp3 등 원하는 유형을 선택
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer

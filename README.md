@@ -85,3 +85,13 @@ ok
 
 
 ### 집계 0인 부분이 생략돼
+
+
+# k8s
+- spark-operator
+- consumer : spark-job 제출
+- producer : 스테이트풀셋 제출
+- web: 디플로이먼트 제출
+- mysql : helm 이용해 생성
+- mongodb : helm 이용해 생성
+- kafka : helm 이용해 생성

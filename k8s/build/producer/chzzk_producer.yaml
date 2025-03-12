@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chzzk-producer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chzzk-producer
+  template:
+    metadata:
+      labels:
+        app: chzzk-producer
+    spec:
+      containers:
+        - name: chzzk-producer
+          image: 691487686124.dkr.ecr.ap-northeast-2.amazonaws.com/chzzk_producer:latest
+          imagePullPolicy: Always
+          env:
+            - name: BROKERS
+              value: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+          volumeMounts:
+            - name: json-secret
+              mountPath: /app/cookies.json
+              subPath: cookies.json
+              readOnly: true
+            - name: json-secret
+              mountPath: /app/channel_list.json
+              subPath: channel_list.json
+              readOnly: true
+      volumes:
+        - name: json-secret
+          secret:
+            secretName: json-secret
