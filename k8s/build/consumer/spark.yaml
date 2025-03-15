@@ -36,7 +36,7 @@ spec:
     serviceAccount: spark-operator-spark
     cores: 1
     instances: 2
-    memory: "2g"
+    memory: "4g"
     env:
       - name: SPARK_HOME
         value: "/opt/bitnami/spark"

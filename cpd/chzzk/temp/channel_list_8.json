@@ -2,21 +2,16 @@
     {
         "channelName": "김나성",
         "channelId": "a9ab391cdd3faef4ca2ee782e96e5c59",
-        "concurrentUserCount": 1302
+        "concurrentUserCount": 1157
     },
     {
-        "channelName": "멀럭킹",
-        "channelId": "0a0a0b83c6af289507ef57a5f3d623c0",
-        "concurrentUserCount": 552
+        "channelName": "거침없이 하이킥",
+        "channelId": "8e21e808ba7e8a071752bbad579fd80c",
+        "concurrentUserCount": 349
     },
     {
-        "channelName": "김귀태",
-        "channelId": "f6d4b4c73644f9ca10fc259efe049b97",
-        "concurrentUserCount": 337
-    },
-    {
-        "channelName": "모라라",
-        "channelId": "6bd0bb97d31365e7834d8113bb01d889",
-        "concurrentUserCount": 320
+        "channelName": "죠니월드",
+        "channelId": "29710a53f37c2f31b0862ed8ce678e44",
+        "concurrentUserCount": 279
     }
 ]

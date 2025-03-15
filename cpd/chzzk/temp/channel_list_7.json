@@ -2,21 +2,11 @@
     {
         "channelName": "무한도전",
         "channelId": "d7ddd7585a271e55159ae47c0ce9a9dd",
-        "concurrentUserCount": 1561
+        "concurrentUserCount": 1478
     },
     {
-        "channelName": "윤가놈",
-        "channelId": "1ad5aa0f6c6741b072528fad5e5e76b1",
-        "concurrentUserCount": 459
-    },
-    {
-        "channelName": "거침없이 하이킥",
-        "channelId": "8e21e808ba7e8a071752bbad579fd80c",
-        "concurrentUserCount": 336
-    },
-    {
-        "channelName": "루이쨘",
-        "channelId": "0aea99d7015373c158d60a7d26bb743a",
-        "concurrentUserCount": 292
+        "channelName": "준상2",
+        "channelId": "96c61ea06b1fa60ce88c15222239e9a9",
+        "concurrentUserCount": 285
     }
 ]

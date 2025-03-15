@@ -34,7 +34,7 @@ def get_connection():
 st.title("메시지 대시보드")
 
 # 채널 ID 입력
-channelName = st.text_input("채널 이름을 입력하세요")
+channelName = st.text_input("채널 이름을 입력하세요 (추천 채널명 : 따효니, 풍월량, 침착맨)")
 if not channelName:
     st.warning("먼저 채널이름을 입력하세요.")
     st.stop()
