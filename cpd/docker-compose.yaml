@@ -1,91 +1,101 @@
 version: "3.8"
 
 services:
-  mysql:
-    image: bitnami/mysql:latest
-    container_name: mysql
+  # mysql:
+  #   image: bitnami/mysql:latest
+  #   container_name: mysql
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=example
+  #     - MYSQL_DATABASE=mydb
+  #     - MYSQL_USER=user
+  #     - MYSQL_PASSWORD=password
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/bitnami/mysql
+  #   networks:
+  #     - my-network
+
+  # mongo:
+  #   image: bitnami/mongodb:latest
+  #   container_name: mongo
+  #   environment:
+  #     - MONGODB_ROOT_PASSWORD=example
+  #     - MONGODB_USERNAME=user
+  #     - MONGODB_PASSWORD=password
+  #     - MONGODB_DATABASE=mydatabase
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo_data:/bitnami/mongodb
+  #   networks:
+  #     - my-network
+
+  # zookeeper:
+  #   image: bitnami/zookeeper:latest
+  #   container_name: zookeeper
+  #   environment:
+  #     - ALLOW_ANONYMOUS_LOGIN=yes
+  #   ports:
+  #     - "2181:2181"
+  #   networks:
+  #     - my-network
+
+  # kafka:
+  #   image: bitnami/kafka:latest
+  #   container_name: kafka
+  #   depends_on:
+  #     - zookeeper
+  #   environment:
+  #     - KAFKA_BROKER_ID=1
+  #     - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+  #     - ALLOW_PLAINTEXT_LISTENER=yes
+  #   ports:
+  #     - "9092:9092"
+  #   # volumes:
+  #   #   - kafka_data:/bitnami/kafka
+  #   networks:
+  #     - my-network
+
+  # producer:
+  #   build: ./producer
+  #   container_name: kafka-producer
+  #   depends_on:
+  #     - kafka
+  #   networks:
+  #     - my-network
+
+  # consumer:
+  #   build: ./consumer
+  #   container_name: kafka-spark-consumer
+  #   depends_on:
+  #     - kafka
+  #     - mysql
+  #     - mongo
+  #   networks:
+  #     - my-network
+
+  # web:
+  #   build: ./web
+  #   container_name: web
+  #   depends_on:
+  #     - mysql
+  #     - mongo
+  #   networks:
+  #     - my-network
+  #   ports:
+  #     - 8501:8501
+
+  chzzk:
+    build: ./chzzk
+    container_name: chzzk
+    networks:
+      - my-network
     environment:
-      - MYSQL_ROOT_PASSWORD=example
-      - MYSQL_DATABASE=mydb
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=password
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/bitnami/mysql
-    networks:
-      - my-network
-
-  mongo:
-    image: bitnami/mongodb:latest
-    container_name: mongo
-    environment:
-      - MONGODB_ROOT_PASSWORD=example
-      - MONGODB_USERNAME=user
-      - MONGODB_PASSWORD=password
-      - MONGODB_DATABASE=mydatabase
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/bitnami/mongodb
-    networks:
-      - my-network
-
-  zookeeper:
-    image: bitnami/zookeeper:latest
-    container_name: zookeeper
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-    ports:
-      - "2181:2181"
-    networks:
-      - my-network
-
-  kafka:
-    image: bitnami/kafka:latest
-    container_name: kafka
-    depends_on:
-      - zookeeper
-    environment:
-      - KAFKA_BROKER_ID=1
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-    ports:
-      - "9092:9092"
-    # volumes:
-    #   - kafka_data:/bitnami/kafka
-    networks:
-      - my-network
-
-  producer:
-    build: ./producer
-    container_name: kafka-producer
-    depends_on:
-      - kafka
-    networks:
-      - my-network
-
-
-  consumer:
-    build: ./consumer
-    container_name: kafka-spark-consumer
-    depends_on:
-      - kafka
-      - mysql
-      - mongo
-    networks:
-      - my-network
-  
-  web:
-    build: ./web
-    container_name: web
-    depends_on:
-      - mysql
-      - mongo
-    networks:
-      - my-network
-    ports:
-      - 8501:8501
+      - CLINET_ID=$CLINET_ID
+      - CLINET_SECRET=$CLINET_SECRET
+    volumes: 
+      - ./chzzk/temp:/app/temp/
 
 volumes:
   mysql_data:

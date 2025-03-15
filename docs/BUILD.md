@@ -1,4 +1,12 @@
+# 도커 클라언트
+cd k8s
+docker compose up -d
+docker exec -it client bash
+
+
+
 # aws
+## eks 생성
 eksctl create cluster \
   --name $EKS_NAME \
   --region ap-northeast-2 \
@@ -12,8 +20,18 @@ eksctl create cluster \
   --node-volume-size 40 \
   --version 1.31
 
-콘솔 root ClusterAdmin
-nodegroup IAM에 ec2FullAceess 추가
+## ebs csi driver 설치
+eksctl create addon \
+  --name aws-ebs-csi-driver \
+  --cluster $EKS_NAME \
+  --region ap-northeast-2
+
+## AWS IAM 권한부여
+- chzzk (client 컨테이너에 aws 계정)
+  - ClusterAdmin
+  
+- nodegroup
+  - ec2FullAceess 추가
 
 
 # helm
@@ -31,7 +49,7 @@ helm repo update
 helm install spark-operator spark-operator/spark-operator --namespace spark-operator --create-namespace
 
 
-# aws
+# aws ecr image
 
 ## ecr producer
 docker run client -n client
@@ -69,15 +87,16 @@ kubectl apply -f build/kafka/kafka-broker.yaml
 kubectl apply -f build/aws/ebs_storage.yaml
 kubectl apply -f build/mysql/mysql.yaml
 
-# monogo
-kubectl apply -f build/mongo/mongo.yaml
 
 # producer
+kubectl delete secret json-secret
 kubectl create secret generic json-secret \
-  --from-file=build/producer/cookies.json \
-  --from-file=build/producer/channel_list.json
+  --from-file=build/producer/secret/
 
+kubectl delete -f build/producer/chzzk_producer.yaml
 kubectl apply -f build/producer/chzzk_producer.yaml
+
+
 # consumer(spark)
 kubectl apply -f build/consumer/rbac.yaml
 kubectl apply -f build/consumer/spark.yaml
@@ -85,6 +104,13 @@ kubectl apply -f build/consumer/spark.yaml
 # web
 kubectl apply -f build/web/web.yaml
 
+# monitoring prometheus grafana
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring --create-namespace \
+  --set grafana.service.type=LoadBalancer
 
 
 
@@ -93,3 +119,17 @@ kubectl apply -f build/web/web.yaml
 eksctl delete cluster --name $EKS_NAME --profile default
 
 
+
+
+# 모니터링
+## 각 db 저장된 데이터 크기기
+SELECT table_schema AS 'Database', 
+       ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
+FROM information_schema.tables 
+GROUP BY table_schema;
+
+
+## 각 테이블 마다 쌓인 로우수
+SELECT table_name, table_rows 
+FROM information_schema.tables
+WHERE table_schema = 'mydb';

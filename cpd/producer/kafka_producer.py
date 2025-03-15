@@ -22,29 +22,29 @@ def get_logger():
 
     return logger
 
+
 if __name__ == '__main__':
     import threading
     import json
     import os
 
-    # 예시: 5개의 채널(streamer id)을 리스트로 정의
-    with open('/app/channel_list.json') as f:
+    with open('/app/channel_list.json', encoding='utf-8') as f:
         channel_list = json.load(f)
-    channel_list = channel_list.values()
-    
+
+    channelId_list = [channel['channelId'] for channel in channel_list]
+
     with open('/app/cookies.json') as f:
         cookies = json.load(f)
-    
-   
 
     logger = get_logger()
     broker = os.environ.get('BROKERS', 'kafka:9092')
 
     threads = []
 
-    for channel in channel_list:
-        chat_instance = ChzzkChat(channel, cookies, logger, broker)
-        t = threading.Thread(target=chat_instance.run, name=f"ChatThread-{channel}")
+    for channelId in channelId_list:
+        chat_instance = ChzzkChat(channelId, cookies, logger, broker)
+        t = threading.Thread(target=chat_instance.run,
+                             name=f"ChatThread-{channelId}")
         t.start()
         threads.append(t)
 

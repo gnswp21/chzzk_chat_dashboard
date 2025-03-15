@@ -87,7 +87,7 @@ with tabs[0]:
             df_results['window_start'] = df_results['window_start'].dt.tz_localize(
                 'UTC').dt.tz_convert(kst)
             df_results['window_start'] = df_results['window_start'].dt.strftime(
-                '%H:%M')
+                '%m-%d %H:%M')
 
             # Altair 차트를 생성하면서 x축 레이블 각도를 0으로 설정해 수평으로 표시
             chart = alt.Chart(df_results).mark_line().encode(
@@ -133,8 +133,8 @@ with tabs[1]:
                     df_results['timestamp'] = df_results['timestamp'].dt.tz_localize(
                         'UTC').dt.tz_convert(kst)
                     # KST 기준으로 HH:MM:SS 형식으로 변환
-                    df_results['timestamp'] = df_results['timestamp'].dt.strftime(
-                        '%H:%M:%S')
+                    # df_results['timestamp'] = df_results['timestamp'].dt.strftime(
+                    #     '%H:%M:%S')
 
                     st.dataframe(df_results)
                 else:
@@ -176,8 +176,8 @@ with tabs[2]:
                     df_results['timestamp'] = df_results['timestamp'].dt.tz_localize(
                         'UTC').dt.tz_convert(kst)
                     # KST 기준으로 HH:MM:SS 형식으로 변환
-                    df_results['timestamp'] = df_results['timestamp'].dt.strftime(
-                        '%H:%M:%S')
+                    # df_results['timestamp'] = df_results['timestamp'].dt.strftime(
+                    #     '%H:%M:%S')
                     st.dataframe(df_results)
                 else:
                     st.write("검색 결과가 없습니다.")

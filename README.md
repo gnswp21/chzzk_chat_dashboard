@@ -1,97 +1,101 @@
-### 참고 링크
+# CHZZK_CHAT_DASHBOARD
 
-치지직 개발자 링크
-https://developers.chzzk.naver.com/
 
-웹사이트 분석
-https://twoicefish-secu.tistory.com/630
+![사진](/docs/img/실시간메시지집계.png)
+치지직 채팅 내역을 실시간 수집해,일정 기간의 채팅수 변화, 닉네임 검색, 채팅 내용 검색 등의 기능을 제공하는 데이터 마트를 운영합니다.
 
-채팅 크롤링
-https://github.com/Buddha7771/ChzzkChat?tab=readme-ov-file
+## 주요 기능
 
-오픈소스 프로젝트 모음
-https://github.com/dokdo2013/awesome-chzzk
-
-### 채팅 로그에 대한 수요
-
-https://gall.dcinside.com/mini/board/view/?id=aesther&no=163893
-https://www.fmkorea.com/4883016492
-
-### 요구사항
-
-_0. 다양한 스트리머의 채팅을 실시간으로 수집할 수 있어야 함_
-
-1. 채팅 실시간 로그 기록
-   1. 기록되는 정보
-      1. 채팅 내용
-      2. 채팅 이름
-      3. 채팅 시간
-      4. 인증비인증,구독,멤버십 정보
-      5. 수집 시간(내부 분석용)
-      6. 방송 날짜, 방송 제목,
-2. 채팅 확인을 위한 데이터 마트 및 BI 대쉬보드 제공
-   1. 치지직 API를 통해 로그인한 유저는 자신의 채팅 확인 가능
-      1. 스트리머별 날짜별로 자신의 채팅 확인 가능
-3. 채팅에 대한 분석 제공
-   1. 실시간 채팅 개수
-   2. 실시간 채팅 개수 변화량 그래프
-   3. 채팅 지수 (10초당 채팅 수)
-   4. 채터(채팅 친 사람) 정보 분류
-   5. (추후 구현)채팅 분위기, 상호작용정도를 나타내
+- **기능 1:** 특정 채널의 채팅 메시지를 5분 단위로 그룹화하여, 최근 25분간의 채팅 건수를 집계·제공하는 기능
+- **기능 2:** 특정 채널의 특정 닉네임의 유저가 작성한 채팅 내역 제공
+- **기능 3:** 특정 채널에서 메세지 내용을 바탕으로 채팅 내역 제공
+- **기능 4:** AWS ELB를 통해 채팅 내역 대쉬보드를 클러스터 외부로 배포
 
 # 프로젝트 아키텍쳐
-
-## 초기 구상
-
-### 단일 스트리머 버전
-
-"1명의 스트리머 채팅창만 수집함" "데모 프로젝트"
-웹소켓 api 코드를 이용하면 채팅창 수집이 가능함
-
-수집
-ec2 노드를 카프카 프로듀서로 선정 -> 카프카 브로커 -> 스파크(카프카 컨슈머)
-
-처리
-10초당 채팅의 개수 세기
-
-저장
-s3 혹은 mysql, big-query
-
-# 작업계획
+![img](/docs/img/architecture.png)
 
 
+## 기술 스택
 
-###
-이 코드는 cookies.json 파일을 읽어오는데, cookie.json의 내용이 종종 바뀐다면  cookie.json을 이미지에 넣는것은 eks에서 파드로 사용하기엔 적합하지 않아
+- **프로그래밍 언어:** Python
+- **프레임워크:** Spark, Kafka
+- **데이터베이스:** Mysql
+- **기타:** Docker, k8s, AWS EKS
 
-ok
+## 메커니즘
+- 데이터 수집 : 치치직 채널에 웹소켓 방식을 통해 연결하여, 채팅 내역을 가져옵니다.
+- 데이터 중계: 수집된 데이터를 카프카 브로커로 전송합니다.
+- 데이터 처리 : 스파크 스트림을 통해 카프카 브로커로 전송된 채팅 데이터를 mysql로 저장합니다.
+- 데이터 마트: Streamlit과 pymysql을 통해 mysql에 저장된 데이터를 요청에 따라 집계 후 개시합니다.
 
-
-### 수집 내결함성?
-파드 동시에 띄우기?
-
-천천히 업데이트할 것
-
-
-### 비용문제
-
-한 파드당 몇 개의 채널을 구독할 것인지
-
-
-### 스레드를 사용하는 것에 대한 장단점
+# 디렉토리 구조 및 빌드
+- 준비
+  - eks 생성 권한이 있는 aws IAM user, 해당 user의 credentials를 /k8s/config/password.txt 에 저장
+- [Build.md](/docs/BUILD.md)를 참고해 "client" 도커 컨테이너를 통해 eks 생성, 각 오퍼레이터 및 k8s 객체 생성
 
 
-### 채널 그래프 보여주는 UI에 대한 고민
+## cpd
+치지직 라이브 정보, 프로듀서, 컨슈머, 웹 대쉬보드에 대한 소스 코드 및 도커파일 
+- chzzk
+  - fetch_live_info.py : 치지직 라이브 정보 패치
+  - sort_channels.py : 라이브 정보를 통해 100명 이상의 시청장를 보유한,  channel_list_[n].json 10개 생성 . 해당 채널 리스트는  프로듀서 파드에 각각 분배되어 프로듀서 파드들이 최대한 균등한 부하를 받도록 구성
+  
+- producer
+  - ChzzkChatAPI : 기존에 사용되던 비공식 Chzzk Chat API를 약간 변형하여 사용
+  - kafka_producer.py : ChzzkChatAPI를 실행하는 실행파일
+
+- consumer
+  - spark_streaming_consumer.py : spark streaming을 통해 kafka 'chzzk' 토픽에 들어오는 메시지(채팅)을 mysql로 실시간 저장
+
+- web
+  - web.py : streamlit을 이용해 사용자가 검색한 채널에 대해 채팅수 변화, 채팅 DB를 제공
+
+## k8s
+- build : 각 k8s 객체에 대한 manifest 파일
+  - aws : ebs stroage class
+  - consumer
+  - kafka 
+  - mongo : -
+  - mysql
+  - producer
+    - *secret* : chzzk-producer 파드가 연결하는 채널 리스트가 담겨있다.
+  - web
+- config: 
+  - password.txt : client 컨테이너에 사용되는 aws IAM user의 credential
 
 
-### 집계 0인 부분이 생략돼
+# 주요 디버그
 
 
-# k8s
-- spark-operator
-- consumer : spark-job 제출
-- producer : 스테이트풀셋 제출
-- web: 디플로이먼트 제출
-- mysql : helm 이용해 생성
-- mongodb : helm 이용해 생성
-- kafka : helm 이용해 생성
+더 자세한 디버그 내역은 [Debug.md](/docs/Debug.md)에서 확인할 수 있습니다.
+
+# 향후 로드맵
+- 모니터링 수단 추가
+  - 프로메테우스, 그라파나 추가
+  - 
+  
+- 웹소켓 방식으로 가져오는 채팅창. 현재 개인 유저의 웹 쿠키가 필요
+  -  이 쿠키를 갱신시킬 수 있는 방법 고안
+  
+- 더 많은 채널의 채팅창을 연결
+  - 현재 5 채널이지만 더 많은 채팅창을 연결 후
+  - 이를 위해 부하 테스트 와 그에 따른 파드 및 노드 증설
+- 더 다양한 대쉬보드 기능 제공
+  - 유저에게 채팅에 따른 채널 점수 제공
+  - 시청자수 대비 채팅 비율 제공
+  - 채팅을 이용한 통계 제공
+    - 현재 가장 많은 채팅을 치고 있는 채널
+    - 일주일간 가장 많은 채팅이 있는 채널
+    - 특정 채널의 채팅을 가장 많이 친 사용자
+
+- 데이터 수집 및 처리에 안정성 및 정합성 테스트
+  - 실시간으로 수집되는 데이터의 총 개수 *
+  - 네트워크 사용량 측정 *
+  - 데이터 유실율율 검사
+  - 데이터 퀄리티 검사
+    - 모든 데이터에 타임스탬프가 있는가?
+    - 모든 데이터에 닉네임, 메세지가 있는가?
+
+# 
+
+해당 프로젝트는 https://github.com/Buddha7771/ChzzkChat?tab=readme-ov-file 코드를 기반으로 만들어졌습니다.
