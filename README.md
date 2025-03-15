@@ -1,21 +1,19 @@
 # CHZZK_CHAT_DASHBOARD
 
 
-<div style="display: flex; justify-content: center; align-items: center;">
-  <img src="/docs/img/실시간메시지집계.png" style="width:300px;  height:300px" alt="실시간 메시지 집계">
-  <div style="width:300px; height:300px; overflow:hidden; margin-left:10px;">
-    <img src="/docs/img/메시지검색.png" style="width:auto; height:100%;" alt="메시지 검색">
-  </div>
-</div>
 
-<div style="text-align: center; font-size: 1.7em; font-weight: bold; margin: 20px 0;">
-  치지직 채팅 내역을 실시간 수집해 다양한 채팅정보를 제공하는 대쉬보드 운영
-</div>
+![img](/docs/img/실시간메시지집계.png)
+
+
+
+치지직 채팅 내역을 실시간 수집해 다양한 채팅정보를 제공하는 대쉬보드 운영
 
 
 - [채널 리스트](/k8s/build/producer/secret/)
 - [배포](http://a50cbb3285f774c5087e00c586e746dd-286620386.ap-northeast-2.elb.amazonaws.com)
 ## 주요 기능
+
+![img](/docs/img/메시지검색.png)
 
 - **기능 1:** 특정 채널의 채팅 메시지를 5분 단위로 그룹화하여, 최근 25분간의 채팅 건수를 집계·제공하는 기능
 - **기능 2:** 특정 채널의 특정 닉네임의 유저가 작성한 채팅 내역 제공
