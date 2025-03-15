@@ -1,11 +1,16 @@
 # CHZZK_CHAT_DASHBOARD
 
 
-![img](/docs/img/실시간메시지집계.png)
-![img](/docs/img/메시지검색.png)
+<div style="display: flex; justify-content: center; align-items: center;">
+  <img src="/docs/img/실시간메시지집계.png" style="width:300px;  height:300px" alt="실시간 메시지 집계">
+  <div style="width:300px; height:300px; overflow:hidden; margin-left:10px;">
+    <img src="/docs/img/메시지검색.png" style="width:auto; height:100%;" alt="메시지 검색">
+  </div>
+</div>
 
-
-치지직 채팅 내역을 실시간 수집해 다양한 채팅정보를 제공하는 대쉬보드 운영
+<div style="text-align: center; font-size: 1.7em; font-weight: bold; margin: 20px 0;">
+  치지직 채팅 내역을 실시간 수집해 다양한 채팅정보를 제공하는 대쉬보드 운영
+</div>
 
 
 - [채널 리스트](/k8s/build/producer/secret/)
