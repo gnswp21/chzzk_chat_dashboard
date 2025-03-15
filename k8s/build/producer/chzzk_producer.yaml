@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: chzzk-producer
+  namespace: default
+spec:
+  serviceName: "chzzk-producer"
+  replicas: 10 # 원하는 파드 수에 맞게 조정
+  selector:
+    matchLabels:
+      app: chzzk-producer
+  template:
+    metadata:
+      labels:
+        app: chzzk-producer
+    spec:
+      initContainers:
+        - name: setup-channel-list
+          image: busybox
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              ordinal=$(echo $POD_NAME | awk -F '-' '{print $NF}')
+              file_num=$(expr $ordinal + 1)
+              echo "Copying channel_list_${file_num}.json to /channel-list/channel_list.json"
+              cp /channel-lists/channel_list_${file_num}.json /channel-list/channel_list.json
+          volumeMounts:
+            - name: channellist-secret
+              mountPath: /channel-lists
+              readOnly: true
+            - name: channel-list-file
+              mountPath: /channel-list
+      containers:
+        - name: chzzk-producer
+          image: 691487686124.dkr.ecr.ap-northeast-2.amazonaws.com/chzzk_producer:latest
+          imagePullPolicy: Always
+          env:
+            - name: BROKERS
+              value: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+          volumeMounts:
+            - name: channel-list-file
+              mountPath: /app/channel_list.json
+              subPath: channel_list.json
+      volumes:
+        - name: channellist-secret
+          secret:
+            secretName:
+              json-secret
+              # 추가 파일이 있다면 계속 나열 (예: channel_list_3.json 등)
+        - name: channel-list-file
+          emptyDir: {}

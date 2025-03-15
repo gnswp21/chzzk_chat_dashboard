@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chzzk-web
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chzzk-web
+  template:
+    metadata:
+      labels:
+        app: chzzk-web
+    spec:
+      containers:
+        - name: chzzk-web
+          image: 691487686124.dkr.ecr.ap-northeast-2.amazonaws.com/chzzk_web:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8501
+          env:
+            - name: MYSQL_HOST
+              value: "mysql"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chzzk-web
+  namespace: default
+spec:
+  selector:
+    app: chzzk-web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8501
+  type: LoadBalancer
