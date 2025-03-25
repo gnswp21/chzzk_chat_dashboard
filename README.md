@@ -5,7 +5,7 @@
 치지직 채팅 내역을 실시간 수집해 다양한 채팅정보를 제공하는 대쉬보드 운영
 
 - [채널 리스트](/k8s/build/producer/secret/)
-- [배포](http://af5ac5495638a44deac0628971e9dccb-853982999.ap-northeast-2.elb.amazonaws.com)
+- [배포](http://a5a09b8fb24a5420da53195eec142574-793482572.ap-northeast-2.elb.amazonaws.com)
 
 ## 주요 기능
 
