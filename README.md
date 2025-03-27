@@ -5,13 +5,13 @@
 ### 프로젝트 개요
 
 CHZZK Chat Dashboard는 웹소켓을 통한 실시간 채팅 데이터 수집부터, Kafka 기반 메시지 중계, Spark 스트리밍 처리, 그리고 Streamlit 대시보드 배포까지의 End-to-End 데이터 파이프라인을 구축한 프로젝트입니다.  
-이 프로젝트는 AWS EKS 상에서 Kubernetes 기반의 분산 처리 클러스터로 운영되며, 로컬 디버깅 환경을 동일하게 구성해 클라우드 비용을 절감할 수 있도록 설계되었습니다.
+이 프로젝트는 AWS EKS 상에서 Kubernetes 기반의 분산 처리 클러스터로 운영되며, 로컬 디버깅 환경을 구성해 클라우드 비용을 절감할 수 있도록 설계되었습니다.
 
 ![img](/docs/img/실시간메시지집계.png)
 
 
 - [채널 리스트](/k8s/build/producer/secret/)
-- [배포](http://a5a09b8fb24a5420da53195eec142574-793482572.ap-northeast-2.elb.amazonaws.com)
+- [배포 일시 중지- 28일 오전 재배포 됩니다.](http://a5a09b8fb24a5420da53195eec142574-793482572.ap-northeast-2.elb.amazonaws.com)
 
 
 
