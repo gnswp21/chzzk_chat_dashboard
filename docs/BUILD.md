@@ -29,9 +29,19 @@ eksctl create addon \
 ## AWS IAM 권한부여
 - chzzk (client 컨테이너에 aws 계정)
   - ClusterAdmin
-  
-- nodegroup
-  - ec2FullAceess 추가
+
+### nodegroup ebs를 위한 ec2FullAccess
+```
+# nodegroup 명 조회
+NG=$(aws eks list-nodegroups --cluster-name $EKS_NAME --query "nodegroups[0]" --output text)
+
+# iam policy 명 조회
+ARN=$(aws eks describe-nodegroup --cluster-name $EKS_NAME --nodegroup-name $NG --query "nodegroup.nodeRole" --output text)
+ARN_NAME=${ARN##*/}
+
+# ec2 full access 추가
+aws iam attach-role-policy --role-name $ARN_NAME --policy-arn arn:aws:iam::aws:policy/AmazonEC2FullAccess
+```
 
 
 # helm

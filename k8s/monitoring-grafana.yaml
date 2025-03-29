@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: monitoring
+    meta.helm.sh/release-namespace: monitoring
+  creationTimestamp: "2025-03-15T14:35:50Z"
+  finalizers:
+  - service.kubernetes.io/load-balancer-cleanup
+  labels:
+    app.kubernetes.io/instance: monitoring
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/version: 11.5.2
+    helm.sh/chart: grafana-8.10.3
+  name: monitoring-grafana
+  namespace: monitoring
+  resourceVersion: "8025"
+  uid: 39c954d8-bb7f-44f9-999a-bd4f30006a26
+spec:
+  allocateLoadBalancerNodePorts: true
+  clusterIP: 10.100.127.26
+  clusterIPs:
+  - 10.100.127.26
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http-web
+    nodePort: 30861
+    port: 80
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app.kubernetes.io/instance: monitoring
+    app.kubernetes.io/name: grafana
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer:
+    ingress:
+    - hostname: a39c954d8bb7f44f9999abd4f30006a2-2145385838.ap-northeast-2.elb.amazonaws.com

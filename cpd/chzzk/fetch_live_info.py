@@ -48,30 +48,8 @@ def fetch_all_live_channels():
     return results
 
 
-def partition_channels(channels, k=10):
-    import heapq
-    """
-    channels: 각 채널 정보를 담은 리스트 (각 항목은 dict로 channelName, channelId, concurrentUserCount 포함)
-    k: 분배할 그룹(파일) 개수
-    """
-    # 시청자 수 내림차순 정렬
-    sorted_channels = sorted(channels, key=lambda x: x.get("concurrentUserCount", 0), reverse=True)
-    
-    # 각 그룹을 (현재 총 시청자수, 그룹 번호, 채널 리스트) 형태의 튜플로 생성
-    bins = [(0, i, []) for i in range(k)]
-    heapq.heapify(bins)
-    
-    # 각 채널을 시청자 수가 가장 적은 그룹에 할당
-    for channel in sorted_channels:
-        current_sum, idx, bin_channels = heapq.heappop(bins)
-        new_sum = current_sum + channel.get("concurrentUserCount", 0)
-        bin_channels.append(channel)
-        heapq.heappush(bins, (new_sum, idx, bin_channels))
-    
-    # 그룹 번호 순서대로 정렬
-    bins_sorted = sorted(bins, key=lambda x: x[1])
-    return bins_sorted
-
+def fetch_follower_infos():
+    base_url = "https://openapi.chzzk.naver.com/open/v1/channels"
 if __name__ == '__main__':
     channels = fetch_all_live_channels()
 
