@@ -11,7 +11,7 @@ CHZZK Chat Dashboard는 웹소켓을 통한 실시간 채팅 데이터 수집부
 
 
 - [채널 리스트](/k8s/build/producer/secret/)
-- [배포 일시 중지- 29일 오전 재배포 됩니다.](http://a5a09b8fb24a5420da53195eec142574-793482572.ap-northeast-2.elb.amazonaws.com)
+- [배포 일시 중지- 3/31일 오전 재배포 됩니다.](http://a5a09b8fb24a5420da53195eec142574-793482572.ap-northeast-2.elb.amazonaws.com)
 
 
 
