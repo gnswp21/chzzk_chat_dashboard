@@ -1,14 +1,134 @@
-{
-  "김도": "17aa057a8248b53affe30512a91481f5",
-  "따효니": "0dad8baf12a436f722faa8e5001c5011",
-  "도다람": "5a091442f87b638efb3e1fbb53643e95",
-  "용감": "9a8b2096f3a38db1ec48a8365dffdb0f",
-  "녹두로": "6e06f5e1907f17eff543abd06cb62891",
-
-  "모라라": "6bd0bb97d31365e7834d8113bb01d889",
-  "하새": "60e2a319d889b3ef6979f68dc3c3fd79",
-  "금쿤": "6aef261524faf48ca3f5b463ba29f061",
-  "서넹": "5777797bab18388e7044ed7bac3c56c8",
-  "피트": "40adc722447978816ce04cf2f0a70590",
-  "라꼬미": "2e6e7ab6e1aac3f0e2105af44eb59630"
-}
+[
+    {
+        "channelName": "네네코 마시로",
+        "channelId": "4515b179f86b67b4981e16190817c580",
+        "concurrentUserCount": 2363,
+        "followerCount": 153240
+    },
+    {
+        "channelName": "도파93",
+        "channelId": "c847a58a1599988f6154446c75366523",
+        "concurrentUserCount": 7921,
+        "followerCount": 111301
+    },
+    {
+        "channelName": "김도",
+        "channelId": "17aa057a8248b53affe30512a91481f5",
+        "concurrentUserCount": 4996,
+        "followerCount": 98243
+    },
+    {
+        "channelName": "철면수심",
+        "channelId": "c892177b4d613127d8c587e9da11d384",
+        "concurrentUserCount": 562,
+        "followerCount": 64734
+    },
+    {
+        "channelName": "헤징",
+        "channelId": "21a0de8b586c517181d76f183272de57",
+        "concurrentUserCount": 936,
+        "followerCount": 56564
+    },
+    {
+        "channelName": "에리스 Eris",
+        "channelId": "17d8605fc37fb5ef49f5f67ae786fe4e",
+        "concurrentUserCount": 706,
+        "followerCount": 36862
+    },
+    {
+        "channelName": "아야 AyaUke",
+        "channelId": "abe8aa82baf3d3ef54ad8468ee73e7fc",
+        "concurrentUserCount": 1168,
+        "followerCount": 33079
+    },
+    {
+        "channelName": "이글콥",
+        "channelId": "eaf7b569c9992d0e57db0059eb5c0eeb",
+        "concurrentUserCount": 783,
+        "followerCount": 27220
+    },
+    {
+        "channelName": "콕 끼리",
+        "channelId": "114aa82f06d0347a755e69d891878255",
+        "concurrentUserCount": 48,
+        "followerCount": 21303
+    },
+    {
+        "channelName": "파 크 모",
+        "channelId": "c9fbf1ca3c2dd3714bb57e2401952856",
+        "concurrentUserCount": 35,
+        "followerCount": 17376
+    },
+    {
+        "channelName": "루루카 RURUKA",
+        "channelId": "99b6020d619b9aac132920604cee8ca1",
+        "concurrentUserCount": 177,
+        "followerCount": 15444
+    },
+    {
+        "channelName": "킴아연",
+        "channelId": "c8572a4f9f863c9443dcdef3a7d4bbcc",
+        "concurrentUserCount": 141,
+        "followerCount": 13869
+    },
+    {
+        "channelName": "치코쟝",
+        "channelId": "005a4859518cb49cf981552b4766905d",
+        "concurrentUserCount": 358,
+        "followerCount": 10613
+    },
+    {
+        "channelName": "까막 KKAMAK",
+        "channelId": "238a2870b188f1c47bb1c02f4e28902c",
+        "concurrentUserCount": 104,
+        "followerCount": 9005
+    },
+    {
+        "channelName": "핑크자크",
+        "channelId": "afc6ae34786283e9802e28b3f3e583f9",
+        "concurrentUserCount": 338,
+        "followerCount": 8854
+    },
+    {
+        "channelName": "밑줄밑줄",
+        "channelId": "16fc49ff5ba7ec5d25a5a978cee3bdda",
+        "concurrentUserCount": 74,
+        "followerCount": 7895
+    },
+    {
+        "channelName": "아무나확 므나",
+        "channelId": "1e4bd7bf6e5f0b8e66614b5b9888c51d",
+        "concurrentUserCount": 110,
+        "followerCount": 6786
+    },
+    {
+        "channelName": "저무콩",
+        "channelId": "9564a99bb335d31be259d1ac695a25f0",
+        "concurrentUserCount": 52,
+        "followerCount": 6314
+    },
+    {
+        "channelName": "아루다루송송",
+        "channelId": "0d800f435656efb53ecd910079b73a0a",
+        "concurrentUserCount": 317,
+        "followerCount": 5820
+    },
+    {
+        "channelName": "코 오 리",
+        "channelId": "dc296b356b142e8be62909568657d038",
+        "concurrentUserCount": 131,
+        "followerCount": 5603
+    },
+    {
+        "channelName": "땅우양",
+        "channelId": "482cdeab4cada3ff6945a24687a944d6",
+        "concurrentUserCount": 9,
+        "followerCount": 5144
+    },
+    {
+        "channelName": "물총맨2",
+        "channelId": "cbfb53e8423d9cc138607fe49b70ac4c",
+        "concurrentUserCount": 101,
+        "followerCount": 5004
+    }
+]

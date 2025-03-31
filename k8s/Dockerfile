@@ -2,7 +2,6 @@ FROM python:3.9
 
 
 RUN apt-get update && apt-get install -y unzip less
-ADD config/password.txt /root/.aws/credentials 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
     ./aws/install
@@ -24,5 +23,5 @@ RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | b
 
 # 실행파일 PATH에 설정정
 ENV PATH=/root/bin:$PATH
-
-RUN aws eks update-kubeconfig --region ap-northeast-2 --name $EKS_NAME
+ENV EKS_NAME chzzk-eks-cluster
+# RUN aws eks update-kubeconfig --region ap-northeast-2 --name $EKS_NAME

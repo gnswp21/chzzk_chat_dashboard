@@ -4,7 +4,6 @@ docker compose up -d
 docker exec -it client bash
 
 
-
 # aws
 ## eks 생성
 eksctl create cluster \
@@ -49,8 +48,7 @@ aws iam attach-role-policy --role-name $ARN_NAME --policy-arn arn:aws:iam::aws:p
 
 helm repo add strimzi https://strimzi.io/charts/
 helm repo update
-kubectl create namespace kafka
-helm install strimzi-kafka-operator strimzi/strimzi-kafka-operator --namespace kafka
+helm install strimzi-kafka-operator strimzi/strimzi-kafka-operator --namespace kafka --create-namespace
 
 ## spark
 
@@ -59,10 +57,10 @@ helm repo update
 helm install spark-operator spark-operator/spark-operator --namespace spark-operator --create-namespace
 
 
-# aws ecr image
+# aws ecr image (도커 컨테이너가 아닌 host k8s 에서 실행)
 
 ## ecr producer
-docker run client -n client
+
 docker build -t producer -f ../cpd/producer/Dockerfile ../cpd/producer
 
 docker exec client aws ecr create-repository --repository-name chzzk_producer --region ap-northeast-2
@@ -114,7 +112,7 @@ kubectl apply -f build/consumer/spark.yaml
 # web
 kubectl apply -f build/web/web.yaml
 
-# monitoring prometheus grafana
+# monitoring prometheus grafana (admin, prom-operator)
 
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update

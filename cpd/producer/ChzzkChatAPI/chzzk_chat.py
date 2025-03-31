@@ -1,81 +1,79 @@
 import argparse
+import asyncio
 import datetime
-import logging
 import json
+import logging
+
 from ChzzkChatAPI import api
-
-from websocket import WebSocket
 from ChzzkChatAPI.cmd_type import CHZZK_CHAT_CMD
-from kafka import KafkaProducer
+import websockets
+from aiokafka import AIOKafkaProducer
 
 
-class ChzzkChat:
-
-    def __init__(self, streamer, cookies, logger, BROKER):
-
+class AsyncChzzkChat:
+    def __init__(self, streamer, cookies, logger, broker=None):
         self.streamer = streamer
         self.cookies = cookies
         self.logger = logger
 
-        self.sid = None
+        # 초기 인증 정보 (동기 방식으로 가져옴)
         self.userIdHash = api.fetch_userIdHash(self.cookies)
-        self.chatChannelId = api.fetch_chatChannelId(
-            self.streamer, self.cookies)
+        self.chatChannelId = api.fetch_chatChannelId(self.streamer, self.cookies)
         self.channelName = api.fetch_channelName(self.streamer)
-        self.accessToken, self.extraToken = api.fetch_accessToken(
-            self.chatChannelId, self.cookies)
-        # kafka
-        if not BROKER:
-            BROKER = "my-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
+        self.accessToken, self.extraToken = api.fetch_accessToken(self.chatChannelId, self.cookies)
+        self.sid = None
 
-        self.producer = KafkaProducer(bootstrap_servers=[BROKER])
+        if not broker:
+            broker = "my-cluster-kafka-brokers.kafka.svc.cluster.local:9092"
+        self.broker = broker
 
-        self.connect()
+        self.producer = None  # aiokafka producer (나중에 초기화)
+        self.websocket = None  # 웹소켓 연결 객체
 
-    def send_kafka_msg(self, channelName, now, chat_type, nickname, msg):
-        TOPIC = 'chzzk'
-        # JSON 형식으로 메시지 구성
-        MESSAGE = json.dumps({
+    async def start_producer(self):
+        """비동기 KafkaProducer 시작"""
+        self.producer = AIOKafkaProducer(bootstrap_servers=self.broker)
+        await self.producer.start()
+
+    async def stop_producer(self):
+        """KafkaProducer 종료"""
+        if self.producer:
+            await self.producer.stop()
+
+    async def send_kafka_msg(self, channelName, now, chat_type, nickname, msg):
+        """Kafka로 메시지를 비동기로 전송합니다."""
+        topic = 'chzzk'
+        message = json.dumps({
             "channelName": channelName,
             "chat_type": chat_type,
             "nickname": nickname,
             "msg": msg
-        })
+        }, ensure_ascii=False)
+        try:
+            await self.producer.send_and_wait(topic, message.encode('utf-8'))
+            self.logger.info(f"Kafka 메시지 전송 성공: {message}")
+        except Exception as e:
+            self.logger.error(f"Kafka 메시지 전송 실패: {e}")
 
-        def on_success(metadata):
-            logging.info(
-                f"메시지 전송 성공: topic={metadata.topic}, partition={metadata.partition}, offset={metadata.offset}"
-            )
+    async def connect(self):
+        """
+        웹소켓 연결을 설정하고 인증 및 최근 채팅 내역 요청을 수행합니다.
+        토큰 갱신도 이 단계에서 수행합니다.
+        """
+        # 토큰 및 채널 정보 갱신 (동기 함수 호출)
+        self.chatChannelId = api.fetch_chatChannelId(self.streamer, self.cookies)
+        self.accessToken, self.extraToken = api.fetch_accessToken(self.chatChannelId, self.cookies)
 
-        def on_error(ex):
-            logging.error(f"메시지 전송 실패: {ex}")
+        uri = 'wss://kr-ss1.chat.naver.com/chat'
+        self.websocket = await websockets.connect(uri)
+        self.logger.info(f'{self.channelName} 채팅창에 연결 중...')
 
-        # 메시지 전송 및 결과 확인
-        future = self.producer.send(TOPIC, MESSAGE.encode('utf-8'))
-        future.add_callback(on_success)
-        future.add_errback(on_error)
-
-        # 메시지 플러시
-        self.producer.flush()
-
-    def connect(self):
-
-        self.chatChannelId = api.fetch_chatChannelId(
-            self.streamer, self.cookies)
-        self.accessToken, self.extraToken = api.fetch_accessToken(
-            self.chatChannelId, self.cookies)
-
-        sock = WebSocket()
-        sock.connect('wss://kr-ss1.chat.naver.com/chat')
-        self.logger.info(f'{self.channelName} 채팅창에 연결 중 .')
-
-        default_dict = {
+        default_payload = {
             "ver": "2",
             "svcid": "game",
             "cid": self.chatChannelId,
         }
-
-        send_dict = {
+        connect_payload = {
             "cmd": CHZZK_CHAT_CMD['connect'],
             "tid": 1,
             "bdy": {
@@ -85,40 +83,34 @@ class ChzzkChat:
                 "auth": "SEND"
             }
         }
+        payload = {**default_payload, **connect_payload}
+        await self.websocket.send(json.dumps(payload))
+        response = await self.websocket.recv()
+        response_data = json.loads(response)
+        self.sid = response_data['bdy']['sid']
+        self.logger.info(f'{self.channelName} 채팅창 연결 중... SID: {self.sid}')
 
-        sock.send(json.dumps(dict(send_dict, **default_dict)))
-        sock_response = json.loads(sock.recv())
-        self.sid = sock_response['bdy']['sid']
-        self.logger.info(f'\r{self.channelName} 채팅창에 연결 중 ..')
-
-        send_dict = {
+        # 최근 채팅 내역 요청
+        request_payload = {
             "cmd": CHZZK_CHAT_CMD['request_recent_chat'],
             "tid": 2,
-
             "sid": self.sid,
             "bdy": {
                 "recentMessageCount": 50
             }
         }
+        payload = {**default_payload, **request_payload}
+        await self.websocket.send(json.dumps(payload))
+        await self.websocket.recv()  # 응답 대기 (내용 사용 안 함)
+        self.logger.info(f'{self.channelName} 채팅창 연결 완료')
 
-        sock.send(json.dumps(dict(send_dict, **default_dict)))
-        sock.recv()
-        self.logger.info(f'\r{self.channelName} 채팅창에 연결 중 ...')
-
-        self.sock = sock
-        if self.sock.connected:
-            self.logger.info('연결 완료')
-        else:
-            raise ValueError('오류 발생')
-
-    def send(self, message: str):
-
-        default_dict = {
-            "ver": 2,
+    async def send(self, message: str):
+        """웹소켓을 통해 채팅 메시지를 전송합니다."""
+        default_payload = {
+            "ver": "2",
             "svcid": "game",
             "cid": self.chatChannelId,
         }
-
         extras = {
             "chatType": "STREAMING",
             "emojis": "",
@@ -126,8 +118,7 @@ class ChzzkChat:
             "extraToken": self.extraToken,
             "streamingChannelId": self.chatChannelId
         }
-
-        send_dict = {
+        send_payload = {
             "tid": 3,
             "cmd": CHZZK_CHAT_CMD['send_chat'],
             "retry": False,
@@ -139,114 +130,105 @@ class ChzzkChat:
                 "msgTime": int(datetime.datetime.now().timestamp())
             }
         }
+        payload = {**default_payload, **send_payload}
+        await self.websocket.send(json.dumps(payload))
 
-        self.sock.send(json.dumps(dict(send_dict, **default_dict)))
+    async def run(self):
+        """메시지 수신 및 Kafka 전송 루프를 비동기로 처리합니다."""
+        await self.start_producer()
+        await self.connect()
 
-    def run(self):
-
-        while True:
-
-            try:
+        try:
+            while True:
+                try:
+                    raw_message = await self.websocket.recv()
+                except websockets.exceptions.ConnectionClosed:
+                    self.logger.error("웹소켓 연결 종료. 재연결 시도...")
+                    await self.connect()
+                    continue
+                except Exception as e:
+                    self.logger.error(f"웹소켓 수신 오류: {e}")
+                    continue
 
                 try:
-                    raw_message = self.sock.recv()
+                    raw_message = json.loads(raw_message)
+                except Exception as e:
+                    self.logger.error(f"메시지 JSON 파싱 오류: {e}")
+                    continue
 
-                except KeyboardInterrupt:
-                    break
-
-                except:
-                    self.connect()
-                    raw_message = self.sock.recv()
-
-                raw_message = json.loads(raw_message)
-                chat_cmd = raw_message['cmd']
-
+                chat_cmd = raw_message.get('cmd')
                 if chat_cmd == CHZZK_CHAT_CMD['ping']:
-
-                    self.sock.send(
-                        json.dumps({
-                            "ver": "2",
-                            "cmd": CHZZK_CHAT_CMD['pong']
-                        })
-                    )
-
-                    # 방송 시작시 chatChannelId가 달라지는 문제
+                    pong_payload = {
+                        "ver": "2",
+                        "cmd": CHZZK_CHAT_CMD['pong']
+                    }
+                    await self.websocket.send(json.dumps(pong_payload))
+                    # 채널 ID가 변경되었는지 확인 (예: 방송 시작 시)
                     if self.chatChannelId != api.fetch_chatChannelId(self.streamer, self.cookies):
-                        self.connect()
-
+                        await self.connect()
                     continue
 
                 if chat_cmd == CHZZK_CHAT_CMD['chat']:
                     chat_type = '채팅'
-
                 elif chat_cmd == CHZZK_CHAT_CMD['donation']:
                     chat_type = '후원'
-
                 else:
                     continue
 
-                for chat_data in raw_message['bdy']:
-
-                    if chat_data['uid'] == 'anonymous':
+                for chat_data in raw_message.get('bdy', []):
+                    if chat_data.get('uid') == 'anonymous':
                         nickname = '익명의 후원자'
-
                     else:
-
                         try:
-                            profile_data = json.loads(chat_data['profile'])
-                            nickname = profile_data["nickname"]
-
+                            profile_data = json.loads(chat_data.get('profile', '{}'))
+                            nickname = profile_data.get("nickname")
                             if 'msg' not in chat_data:
                                 continue
-
-                        except:
+                        except Exception as e:
+                            self.logger.error(f"프로필 데이터 파싱 오류: {e}")
                             continue
 
-                    now = datetime.datetime.fromtimestamp(
-                        chat_data['msgTime']/1000)
-                    now = datetime.datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
-
-                    # msg = f'[{self.channelName}][{now}][{chat_type}] {nickname} : {chat_data["msg"]}'
-                    self.send_kafka_msg(
-                        self.channelName, now, chat_type, nickname, chat_data["msg"])
-                    self.logger.info(
-                        f'[{self.channelName}][{now}][{chat_type}] {nickname} : {chat_data["msg"]}')
-
-            except:
-                pass
+                    timestamp = chat_data.get('msgTime', 0) / 1000.0
+                    now = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                    msg_text = chat_data.get("msg", "")
+                    await self.send_kafka_msg(self.channelName, now, chat_type, nickname, msg_text)
+                    self.logger.info(f'[{self.channelName}][{now}][{chat_type}] {nickname} : {msg_text}')
+        finally:
+            await self.stop_producer()
+            await self.websocket.close()
 
 
 def get_logger():
-
-    formatter = logging.Formatter('%(message)s')
-
-    logger = logging.getLogger()
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger("AsyncChzzkChatLogger")
     logger.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler('chat.log', mode="w")
+    file_handler = logging.FileHandler('chat.log', mode="w", encoding='utf-8')
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
-
     return logger
 
 
-# if __name__ == '__main__':
+async def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--streamer_id', type=str, default='cd04c50c6ff488ac96f8900e26e5b993',
+                        help="Streamer ID")
+    #parser.add_argument('--cookies', type=str, default='/app/cookies.json', help="쿠키 파일 경로 (JSON 형식)")
+    parser.add_argument('--cookies', type=str, default='cookies.json', help="쿠키 파일 경로 (JSON 형식)")
+    parser.add_argument('--broker', type=str, default=None, help="Kafka 브로커 주소")
+    args = parser.parse_args()
 
-#     parser = argparse.ArgumentParser()
+    with open(args.cookies, 'r', encoding='utf-8') as f:
+        cookies = json.load(f)
 
-#     with open('/app/cookies.json') as f:
-#         cookies = json.load(f)
+    logger = get_logger()
+    chat_client = AsyncChzzkChat(args.streamer_id, cookies, logger, args.broker)
+    await chat_client.run()
 
-#     streamer_id = 'bb382c2c0cc9fa7c86ab3b037fb5799c'
-#     parser.add_argument('--streamer_id', type=str, default=streamer_id)
-#     args = parser.parse_args()
 
-#     logger = get_logger()
-#     chzzkchat = ChzzkChat(args.streamer_id, cookies, logger)
-
-#     # 채팅 크롤링
-#     chzzkchat.run()
+if __name__ == '__main__':
+    asyncio.run(main())

@@ -90,14 +90,14 @@ schema = StructType([
     StructField("msg", StringType(), True)
 ])
 
-# ✅ Kafka 메시지 읽기
+# Kafka 메시지 읽기
 df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", BROKERS) \
     .option("subscribe", "chzzk") \
     .load()
 
-# ✅ Kafka 메시지 JSON 변환 및 Kafka 타임스탬프 활용
+# Kafka 메시지 JSON 변환 및 Kafka 타임스탬프 활용
 df_parsed = df.select(
     col("timestamp").alias("timestamp"),  # Kafka 타임스탬프
     from_json(col("value").cast("string"), schema).alias("data")

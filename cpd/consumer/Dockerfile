@@ -23,4 +23,4 @@ RUN adduser --disabled-password --gecos '' --uid 1001 sparkuser
 
 USER sparkuser
 
-# CMD ["/opt/bitnami/spark/bin/spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1", "/app/spark_streaming_consumer.py"]
+CMD ["/opt/bitnami/spark/bin/spark-submit", "--packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1", "/app/spark_streaming_consumer.py"]

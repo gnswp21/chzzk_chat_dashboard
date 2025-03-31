@@ -1,12 +1,16 @@
 services:
   client:
     container_name: client
-    image: client
+    build: .
     volumes:
       - .:/app
     working_dir: /app
-    command: ["sleep", "infinity"]
+    command: >
+      sh -c "aws eks update-kubeconfig --region ap-northeast-2 --name chzzk-eks-cluster && sleep infinity"
     environment:
-      - EKS_NAME=chzzk-eks-cluster
+      # .env (gitignored)
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_DEFAULT_REGION
 
   
