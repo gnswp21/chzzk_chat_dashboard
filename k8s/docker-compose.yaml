@@ -1,7 +1,7 @@
 services:
   client:
     container_name: client
-    image: client
+    build: .
     volumes:
       - .:/app
     working_dir: /app
