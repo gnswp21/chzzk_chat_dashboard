@@ -1,129 +1,177 @@
 [
     {
-        "channelName": "아라하시 타비",
-        "channelId": "a6c4ddb09cdb160478996007bff35296",
-        "concurrentUserCount": 5481,
-        "followerCount": 177356
+        "channelName": "다주",
+        "channelId": "bdc57cc4217173f0e89f63fba2f1c6e5",
+        "concurrentUserCount": 5185,
+        "followerCount": 196070
     },
     {
-        "channelName": "도파93",
-        "channelId": "c847a58a1599988f6154446c75366523",
-        "concurrentUserCount": 7921,
-        "followerCount": 111301
+        "channelName": "지누",
+        "channelId": "2086f44c7b09a17cef6786f21389db3b",
+        "concurrentUserCount": 2829,
+        "followerCount": 128002
     },
     {
-        "channelName": "남봉",
-        "channelId": "ac6a03808bffbe58b3bfb0e25271836e",
-        "concurrentUserCount": 1984,
-        "followerCount": 93282
+        "channelName": "양아지",
+        "channelId": "3e825479d71ead63b76de0d6f6b5dc83",
+        "concurrentUserCount": 930,
+        "followerCount": 101964
     },
     {
-        "channelName": "철면수심",
-        "channelId": "c892177b4d613127d8c587e9da11d384",
-        "concurrentUserCount": 562,
-        "followerCount": 64734
+        "channelName": "행돌",
+        "channelId": "6cac96d5c9b7a9fd28903aa32fc61749",
+        "concurrentUserCount": 3866,
+        "followerCount": 86230
     },
     {
-        "channelName": "초승달",
-        "channelId": "65c3035bdc598c81f15a8fe0e958b3ce",
-        "concurrentUserCount": 750,
-        "followerCount": 58423
+        "channelName": "살구",
+        "channelId": "7efa5b40ee1729ac57d3adbebf3ddb3c",
+        "concurrentUserCount": 1022,
+        "followerCount": 65305
     },
     {
-        "channelName": "뇨롱이",
-        "channelId": "c65ca7335aaeb2ca0c985078223017c0",
-        "concurrentUserCount": 690,
-        "followerCount": 39515
+        "channelName": "아빠킹",
+        "channelId": "1161eb13d304f943542d0c8640928544",
+        "concurrentUserCount": 801,
+        "followerCount": 58985
     },
     {
-        "channelName": "무한도전",
-        "channelId": "d7ddd7585a271e55159ae47c0ce9a9dd",
-        "concurrentUserCount": 1438,
-        "followerCount": 35909
+        "channelName": "헤징",
+        "channelId": "21a0de8b586c517181d76f183272de57",
+        "concurrentUserCount": 936,
+        "followerCount": 56564
     },
     {
-        "channelName": "윤가놈",
-        "channelId": "1ad5aa0f6c6741b072528fad5e5e76b1",
-        "concurrentUserCount": 302,
-        "followerCount": 30307
+        "channelName": "고수달",
+        "channelId": "1343a0e30ff0acb09f2477a698d070a4",
+        "concurrentUserCount": 1440,
+        "followerCount": 41154
     },
     {
-        "channelName": "오화요 Ohwayo",
-        "channelId": "65a53076fe1a39636082dd6dba8b8a4b",
-        "concurrentUserCount": 359,
-        "followerCount": 27477
+        "channelName": "이로나묭 치카",
+        "channelId": "ec30975bd41d3179fe7734ddbf760acb",
+        "concurrentUserCount": 431,
+        "followerCount": 36596
     },
     {
-        "channelName": "칸데르니아",
-        "channelId": "bee4b42475b5937226b8b7ccbe2eb2dc",
-        "concurrentUserCount": 773,
-        "followerCount": 22123
+        "channelName": "아야 AyaUke",
+        "channelId": "abe8aa82baf3d3ef54ad8468ee73e7fc",
+        "concurrentUserCount": 1168,
+        "followerCount": 33079
     },
     {
-        "channelName": "김츠유",
-        "channelId": "a02dc370efd2befeac97881dc83f11bb",
-        "concurrentUserCount": 324,
-        "followerCount": 20220
+        "channelName": "꽃빈",
+        "channelId": "ec63f122d921707806fc27e42c7a997d",
+        "concurrentUserCount": 232,
+        "followerCount": 29293
     },
     {
-        "channelName": "미치르",
-        "channelId": "390efc6c5186f85427b2d61297a9d4ed",
-        "concurrentUserCount": 270,
-        "followerCount": 16464
+        "channelName": "냐 미",
+        "channelId": "afff6e3cc8c1487bc4135bc896811dcc",
+        "concurrentUserCount": 358,
+        "followerCount": 23390
     },
     {
-        "channelName": "루루카 RURUKA",
-        "channelId": "99b6020d619b9aac132920604cee8ca1",
-        "concurrentUserCount": 177,
-        "followerCount": 15444
+        "channelName": "이선생",
+        "channelId": "952e7d21b36d75675894f97e4975bf9f",
+        "concurrentUserCount": 360,
+        "followerCount": 22615
     },
     {
-        "channelName": "청 묘",
-        "channelId": "f26f5a2d1336f15cb2f3bc9513ab2501",
-        "concurrentUserCount": 392,
-        "followerCount": 12895
+        "channelName": "서애덕",
+        "channelId": "643d491a022eaf3991f0576c7a2a97d4",
+        "concurrentUserCount": 285,
+        "followerCount": 19918
     },
     {
-        "channelName": "킹발젭",
-        "channelId": "56ccd5e4bd7b4d39085cb8569cbe7b7b",
-        "concurrentUserCount": 73,
-        "followerCount": 11337
+        "channelName": "이클리피아",
+        "channelId": "ae5649bc33aec562576ae04b41e7367b",
+        "concurrentUserCount": 185,
+        "followerCount": 17671
     },
     {
-        "channelName": "김배마",
-        "channelId": "da8a48c948f8fa1048eda60e568b3178",
-        "concurrentUserCount": 289,
-        "followerCount": 10187
+        "channelName": "순망",
+        "channelId": "6a09c296e5e12ad5ed67e053f8cc98d5",
+        "concurrentUserCount": 226,
+        "followerCount": 15624
     },
     {
-        "channelName": "핑크자크",
-        "channelId": "afc6ae34786283e9802e28b3f3e583f9",
-        "concurrentUserCount": 338,
-        "followerCount": 8854
+        "channelName": "슈마 Shuma",
+        "channelId": "16b84d7efd83808926a8b2afb5ccfc2f",
+        "concurrentUserCount": 128,
+        "followerCount": 15243
     },
     {
-        "channelName": "우기잉ㅋ",
-        "channelId": "4b8f70a27b7558c3176847d6e7b55a4c",
-        "concurrentUserCount": 112,
-        "followerCount": 8465
+        "channelName": "SIRU 시루다냥",
+        "channelId": "b61ef6fa5384e55d69e0b56267459523",
+        "concurrentUserCount": 472,
+        "followerCount": 12600
     },
     {
-        "channelName": "고요o3o",
-        "channelId": "a460b2a89272031478c24d2126c92cfa",
-        "concurrentUserCount": 28,
-        "followerCount": 7282
+        "channelName": "혜미 ham",
+        "channelId": "888bdc1e2fbe68322574cbe883b34ee4",
+        "concurrentUserCount": 293,
+        "followerCount": 11777
     },
     {
-        "channelName": "하이유ㅎ",
-        "channelId": "6714a56d90653b3527a6de681ebc312e",
-        "concurrentUserCount": 93,
-        "followerCount": 7030
+        "channelName": "남궁루리 NGRULI",
+        "channelId": "5f7890a846ee8f4648dbb35f98dbe41c",
+        "concurrentUserCount": 138,
+        "followerCount": 10972
     },
     {
-        "channelName": "먼치",
-        "channelId": "686d397700577e26e48df0fe4bd2cc06",
-        "concurrentUserCount": 12,
-        "followerCount": 6404
+        "channelName": "고뇨",
+        "channelId": "e952631cf676815f96c230001d9df3c1",
+        "concurrentUserCount": 295,
+        "followerCount": 9910
+    },
+    {
+        "channelName": "끠월마녀",
+        "channelId": "dcfd3c7cf3c05b41306a4cc249ad5c9f",
+        "concurrentUserCount": 100,
+        "followerCount": 9849
+    },
+    {
+        "channelName": "판자집강아지",
+        "channelId": "37569f91da7035d9f33c2f73d23d7255",
+        "concurrentUserCount": 143,
+        "followerCount": 8637
+    },
+    {
+        "channelName": "어화둥둥이",
+        "channelId": "5c92903d370e18878dd4f38bbddc929c",
+        "concurrentUserCount": 179,
+        "followerCount": 8322
+    },
+    {
+        "channelName": "낡은창고 oldstore",
+        "channelId": "f5feedab25060a675ed62f3348e625cf",
+        "concurrentUserCount": 113,
+        "followerCount": 7380
+    },
+    {
+        "channelName": "트롤야1",
+        "channelId": "826f57d3283418e1fa39dfb23dc1dea8",
+        "concurrentUserCount": 147,
+        "followerCount": 7169
+    },
+    {
+        "channelName": "흐쟁이",
+        "channelId": "32e8563e043bbd4f0bdd0430f55189a7",
+        "concurrentUserCount": 33,
+        "followerCount": 6563
+    },
+    {
+        "channelName": "오단밍",
+        "channelId": "f3b204dd3fd6925835ca1848cd4b6d3c",
+        "concurrentUserCount": 249,
+        "followerCount": 6335
+    },
+    {
+        "channelName": "겜나나",
+        "channelId": "d4a790246202e97cfd90a193e17ebcb1",
+        "concurrentUserCount": 48,
+        "followerCount": 6030
     },
     {
         "channelName": "병병병2",
@@ -132,21 +180,27 @@
         "followerCount": 5907
     },
     {
-        "channelName": "메가재범",
-        "channelId": "988f7ce0360c7e5d4636c59d39838f3d",
-        "concurrentUserCount": 198,
-        "followerCount": 5639
+        "channelName": "센 카르멘",
+        "channelId": "baf2109352261c8dd091feae895f3a11",
+        "concurrentUserCount": 54,
+        "followerCount": 5569
     },
     {
-        "channelName": "최마치",
-        "channelId": "057a9a03fea9b368eb0c76b9e95e1ae5",
-        "concurrentUserCount": 447,
-        "followerCount": 5349
+        "channelName": "준버드",
+        "channelId": "74b996fd959c56cc5421d887b6d772ae",
+        "concurrentUserCount": 39,
+        "followerCount": 5396
     },
     {
-        "channelName": "물총맨2",
-        "channelId": "cbfb53e8423d9cc138607fe49b70ac4c",
-        "concurrentUserCount": 101,
-        "followerCount": 5004
+        "channelName": "청세치혀",
+        "channelId": "e2f98e79a70194da1d2f0ebd250c934d",
+        "concurrentUserCount": 28,
+        "followerCount": 5194
+    },
+    {
+        "channelName": "주 제",
+        "channelId": "063ef80a05abbe8b1d8074e40eb32d39",
+        "concurrentUserCount": 114,
+        "followerCount": 5096
     }
 ]
