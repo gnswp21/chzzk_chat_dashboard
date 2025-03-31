@@ -112,7 +112,7 @@ kubectl apply -f build/consumer/spark.yaml
 # web
 kubectl apply -f build/web/web.yaml
 
-# monitoring prometheus grafana
+# monitoring prometheus grafana (admin, prom-operator)
 
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update

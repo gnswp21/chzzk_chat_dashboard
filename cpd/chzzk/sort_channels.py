@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     # 각 그룹을 별도의 JSON 파일로 저장 및 그룹별 시청자 수 출력
     for current_sum, idx, bin_channels in bins:
-        file_name = f"channels/channel_list_{idx+1:02}.json"
+        file_name = f"channels/channel_list_{idx:02}.json"
         with open(file_name, "w", encoding="utf-8") as f:
             json.dump(bin_channels, f, ensure_ascii=False, indent=4)
         print(
