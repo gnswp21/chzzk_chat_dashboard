@@ -10,9 +10,8 @@ eksctl create cluster \
   --name $EKS_NAME \
   --region ap-northeast-2 \
   --with-oidc \
-  --instance-types=m5.xlarge \
+  --instance-types=t3a.large \
   --managed \
-  --profile default \
   --nodes 2 \
   --nodes-min 2 \
   --nodes-max 2 \
@@ -124,7 +123,7 @@ helm install monitoring prometheus-community/kube-prometheus-stack \
 
 ### delete
 
-eksctl delete cluster --name $EKS_NAME --profile default
+eksctl delete cluster --name $EKS_NAME
 
 
 
