@@ -1,4 +1,4 @@
-### 치지직 채팅 대시보드 프로젝트 개요
+# 치지직 채팅 대시보드 
 <div style="text-align: center;">
   <p style="font-weight: bold;">실시간 채팅 메시지 수 집계 그래프</p>
   <img src="/docs/img/실시간메시지집계.png" alt="img" width="600px">
